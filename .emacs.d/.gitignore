@@ -1,0 +1,29 @@
+# Ignore Emacs auto-generated files
+*~
+\#*\#
+.\#*
+
+# Ignore backup and autosave files
+*.bak
+*.swp
+*.swo
+*.tmp
+*.autosave
+
+# Ignore lock files
+!/.emacs.d/
+.emacs.d/auto-save-list/
+
+# Ignore compiled Emacs Lisp files
+*.elc
+
+# Ignore Org-roam database (if using Org-roam)
+.emacs.d/org-roam.db
+
+# Optional: Ignore specific directories or files
+.emacs.d/.cache/
+.emacs.d/elpa/
+
+# Keep core configuration files (init.el and others)
+!/.emacs.d/init.el
+

@@ -3,6 +3,9 @@
 !/.config/
 /.config/*
 
+!/.emacs.d/
+!/.emacs.d/**
+
 !/.config/nvim/
 !/.config/nvim/**
 
