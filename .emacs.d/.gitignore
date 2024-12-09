@@ -11,19 +11,32 @@
 *.autosave
 
 # Ignore lock files
-!/.emacs.d/
-.emacs.d/auto-save-list/
+auto-save-list/
+.emacs.desktop
+.emacs.desktop.lock
 
-# Ignore compiled Emacs Lisp files
+# Ignore byte-compiled Lisp files
 *.elc
 
-# Ignore Org-roam database (if using Org-roam)
-.emacs.d/org-roam.db
+# Ignore package manager files and downloaded packages
+elpa/
+straight/
+.cask/
 
-# Optional: Ignore specific directories or files
-.emacs.d/.cache/
-.emacs.d/elpa/
+# Ignore Org-roam database
+org-roam.db
 
-# Keep core configuration files (init.el and others)
-!/.emacs.d/init.el
+# Ignore additional caches or temporary files
+.cache/
+url/
+eshell/
+places
+history
+bookmarks
+recentf
+
+# Keep your core configuration files
+!init.el
+!config.el
+!custom.el
 
