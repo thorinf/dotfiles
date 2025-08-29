@@ -34,6 +34,7 @@ places
 history
 bookmarks
 recentf
+eln-cache/
 
 # Keep your core configuration files
 !init.el

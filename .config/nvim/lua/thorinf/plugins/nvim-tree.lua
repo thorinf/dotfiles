@@ -33,7 +33,11 @@ nvimtree.setup({
       window_picker = {
         enable = false,
       },
+      quit_on_open = true,
     },
+  },
+  view = {
+    width = 30,
   },
   -- 	git = {
   -- 		ignore = false,
