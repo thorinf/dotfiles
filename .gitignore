@@ -18,6 +18,9 @@
 !/.config/tmux/**
 /.config/tmux/plugins/
 
+!/.config/ruff/
+!/.config/ruff/**
+
 !/.zshrc
 !/.p10k.zsh
 
