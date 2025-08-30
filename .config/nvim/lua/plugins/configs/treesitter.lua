@@ -6,6 +6,7 @@ return {
 		"rust",
 		"gleam",
 		"templ",
+		"python",
 	},
 	highlight = {
 		enable = true,

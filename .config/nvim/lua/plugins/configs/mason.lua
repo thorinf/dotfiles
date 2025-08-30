@@ -8,5 +8,9 @@ return {
     "rust-analyzer",
     "rustfmt",
     "stylua",
+    -- python
+    "basedpyright",
+    "ruff",
+    "ruff-lsp",
   },
 }

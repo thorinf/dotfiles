@@ -41,6 +41,15 @@ return {
 			})
 
 			lspconfig.templ.setup({})
+
+			-- Python: Ruff for linting/code actions + BasedPyright for types
+			lspconfig.ruff_lsp.setup({
+				capabilities = capabilities,
+			})
+
+			lspconfig.basedpyright.setup({
+				capabilities = capabilities,
+			})
 		end,
 	},
 }
