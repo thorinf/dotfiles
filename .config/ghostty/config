@@ -1,0 +1,25 @@
+# font
+font-family = "FiraCode Nerd Font"
+font-size = 14
+
+# appearance
+theme = tokyonight
+background-opacity = 0.95
+window-decoration = false
+
+# behavior
+mouse-hide-while-typing = true
+copy-on-select = true
+
+# keybindings for pane navigation
+keybind = cmd+left=goto_split:left
+keybind = cmd+right=goto_split:right
+keybind = cmd+up=goto_split:top
+keybind = cmd+down=goto_split:bottom
+
+# split creation
+keybind = cmd+d=new_split:right
+keybind = cmd+shift+d=new_split:down
+
+# window management
+keybind = cmd+w=close_surface

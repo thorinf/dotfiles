@@ -11,6 +11,9 @@
 !/.config/nvim/
 !/.config/nvim/**
 
+!/.config/ghostty/
+!/.config/ghostty/**
+
 !/.zshrc
 !/.p10k.zsh
 
