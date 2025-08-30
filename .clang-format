@@ -1,0 +1,3 @@
+# Minimal global clang-format
+BasedOnStyle: LLVM
+ColumnLimit: 120

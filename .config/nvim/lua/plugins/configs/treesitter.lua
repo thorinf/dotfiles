@@ -1,12 +1,14 @@
 return {
 	ensure_installed = {
-		"go",
 		"lua",
 		"pkl",
 		"rust",
 		"gleam",
 		"templ",
 		"python",
+		"c",
+		"cpp",
+		"haskell",
 	},
 	highlight = {
 		enable = true,

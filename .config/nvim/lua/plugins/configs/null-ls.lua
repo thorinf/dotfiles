@@ -3,11 +3,9 @@ local null_ls = require("null-ls")
 
 return {
   sources = {
-    null_ls.builtins.formatting.golines,
-    null_ls.builtins.formatting.goimports_reviser,
     null_ls.builtins.formatting.stylua,
-    -- use Ruff as the Python formatter
-    null_ls.builtins.formatting.ruff,
+    null_ls.builtins.formatting.clang_format,
+    -- Python formatting handled by Ruff LSP (not null-ls)
   },
   on_attach = function(client, bufnr)
     if client.supports_method("textDocument/formatting") then

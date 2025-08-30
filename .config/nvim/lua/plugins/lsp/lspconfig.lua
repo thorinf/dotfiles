@@ -20,17 +20,7 @@ return {
 
 			lspconfig.rust_analyzer.setup({})
 
-			lspconfig.gopls.setup({
-				filetypes = { "go", "gomod", "gowork", "gotmpl" },
-				settings = {
-					env = {
-						GOEXPERIMENT = "rangefunc",
-					},
-					formatting = {
-						gofumpt = true,
-					},
-				},
-			})
+			-- (Go disabled by user)
 
 			lspconfig.tailwindcss.setup({
 				settings = {
@@ -42,14 +32,57 @@ return {
 
 			lspconfig.templ.setup({})
 
-			-- Python: Ruff for linting/code actions + BasedPyright for types
-			lspconfig.ruff_lsp.setup({
+			-- C/C++/CUDA: clangd
+			local clang_capabilities = vim.tbl_deep_extend("force", capabilities, { offsetEncoding = { "utf-16" } })
+			lspconfig.clangd.setup({
+				capabilities = clang_capabilities,
+				cmd = {
+					"clangd",
+					"--background-index",
+					"--clang-tidy",
+					"--header-insertion=never",
+					"--query-driver=/usr/bin/clang*,/usr/bin/clang-*,/usr/bin/g++,/usr/bin/gcc,/usr/local/cuda/bin/*",
+				},
+			})
+
+			-- Haskell: HLS
+			lspconfig.hls.setup({
 				capabilities = capabilities,
 			})
 
-			lspconfig.basedpyright.setup({
+
+			-- Python: Ruff (built-in LSP) for linting/code actions + BasedPyright for types
+			local ruff_fmt_group = vim.api.nvim_create_augroup("RuffFormatOnSave", { clear = true })
+			lspconfig.ruff.setup({
 				capabilities = capabilities,
+				on_attach = function(client, bufnr)
+					if client.supports_method("textDocument/formatting") then
+						vim.api.nvim_clear_autocmds({ group = ruff_fmt_group, buffer = bufnr })
+						vim.api.nvim_create_autocmd("BufWritePre", {
+							group = ruff_fmt_group,
+							buffer = bufnr,
+							callback = function()
+								vim.lsp.buf.format({ bufnr = bufnr, id = client.id })
+							end,
+						})
+					end
+				end,
 			})
+
+			-- Ensure basedpyright works even if lspconfig is older
+			local configs = require('lspconfig.configs')
+			local util = require('lspconfig.util')
+			if not configs.basedpyright then
+				configs.basedpyright = {
+					default_config = {
+						cmd = { 'basedpyright-langserver', '--stdio' },
+						filetypes = { 'python' },
+						root_dir = util.root_pattern('pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', '.git'),
+						settings = {},
+					},
+				}
+			end
+			lspconfig.basedpyright.setup({ capabilities = capabilities })
 		end,
 	},
 }

@@ -25,3 +25,5 @@
 !/.p10k.zsh
 
 !/.gitignore
+!/.clang-tidy
+!/.clang-format

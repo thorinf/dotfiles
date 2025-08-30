@@ -1,9 +1,5 @@
 return {
   ensure_installed = {
-    "gofumpt",
-    "goimports",
-    "golines",
-    "gopls",
     "lua-language-server",
     "rust-analyzer",
     "rustfmt",
@@ -11,6 +7,9 @@ return {
     -- python
     "basedpyright",
     "ruff",
-    "ruff-lsp",
+    -- c/c++/cuda
+    "clangd",
+    "clang-format",
+    -- haskell (disabled: install system-wide instead)
   },
 }
