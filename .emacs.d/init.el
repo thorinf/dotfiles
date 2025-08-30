@@ -43,4 +43,3 @@
 
 (with-eval-after-load 'org
   (evil-define-key 'normal org-mode-map (kbd "TAB") 'org-cycle))
-(evil-define-key 'normal org-mode-map (kbd "TAB") 'org-cycle))
