@@ -36,8 +36,14 @@ bookmarks
 recentf
 eln-cache/
 
+# Additional common Emacs-generated files
+transient/
+tramp/
+network-security.data
+projectile-bookmarks.eld
+lsp-session-v1
+
 # Keep your core configuration files
 !init.el
 !config.el
 !custom.el
-

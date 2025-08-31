@@ -1,0 +1,6 @@
+# Ignore local plugin directory if present (keeps repo clean)
+plugin/
+
+# Optional: personal spell files
+spell/
+
