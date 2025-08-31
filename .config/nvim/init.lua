@@ -2,6 +2,13 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- providers
+vim.g.loaded_node_provider = 0
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_perl_provider = 0
+-- Python provider via uv-managed venv
+vim.g.python3_host_prog = os.getenv("HOME") .. "/.venvs/nvim/bin/python"
+
 -- lazy.nvim bootstrap
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
