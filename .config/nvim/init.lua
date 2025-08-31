@@ -60,4 +60,10 @@ local is_windows = vim.loop.os_uname().sysname == "Windows_NT"
 vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin" .. (is_windows and ";" or ":") .. vim.env.PATH
 
 -- load plugins
-require("lazy").setup("plugins")
+require("lazy").setup("plugins", {
+  -- Disable LuaRocks/Hererocks to silence health warnings
+  rocks = {
+    enabled = false,
+    hererocks = false,
+  },
+})
