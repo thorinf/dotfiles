@@ -9,6 +9,9 @@ return {
 		"c",
 		"cpp",
 		"haskell",
+		"json",
+		"jsonc",
+		"yaml",
 	},
 	highlight = {
 		enable = true,

@@ -39,6 +39,22 @@ return {
 
 			lspconfig.templ.setup({})
 
+			-- JSON
+			lspconfig.jsonls.setup({
+				capabilities = capabilities,
+			})
+
+			-- YAML
+			lspconfig.yamlls.setup({
+				capabilities = capabilities,
+				settings = {
+					yaml = {
+						schemaStore = { enable = true },
+						validate = true,
+					},
+				},
+			})
+
 			-- C/C++/CUDA: clangd
 			local clang_capabilities = vim.tbl_deep_extend("force", capabilities, { offsetEncoding = { "utf-16" } })
 			lspconfig.clangd.setup({

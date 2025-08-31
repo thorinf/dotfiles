@@ -7,6 +7,9 @@ return {
     -- python
     "basedpyright",
     "ruff",
+    -- json/yaml
+    "json-lsp",
+    "yaml-language-server",
     -- c/c++/cuda
     "clangd",
     "clang-format",
