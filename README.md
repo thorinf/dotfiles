@@ -64,6 +64,9 @@ If you have your own small Neovim Lua files under `~/.config/nvim/plugin/`, unâ€
 - Ctrl+p / Ctrl+n: history search backward/forward
 - Alt+w: kill region
 - Powerlevel10k theme; zinit manages plugins (syntax, completions, autosuggest)
+- Pomodoro alias: requires a macOS Shortcuts shortcut named "Start Pomodoro" (or "Start Pomodoro 1").
+  - Example invocation: `shortcuts run "Start Pomodoro 1" --input-string 25` (25 minutes)
+  - If you renamed the shortcut, update the alias in `~/.zshrc` accordingly.
 
 ### TMUX
 - Prefix: Ctrl+a (send-prefix on Ctrl+a)
