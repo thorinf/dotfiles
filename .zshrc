@@ -73,3 +73,8 @@ alias c='clear'
 alias smi='watch -n 0.1 nvidia-smi'
 
 alias dotfiles='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+
+# macOS only aliases
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  alias pomo='shortcuts run "Start Pomodoro"'
+fi
