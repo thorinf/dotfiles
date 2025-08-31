@@ -27,7 +27,7 @@ dotfiles push                      # push to origin
 ## Tracking Policy
 
 - Plugins: do not vendor third‑party plugin code. Rely on managers to install.
-- Locks: track pin files for reproducibility (e.g., `~/.config/nvim/lazy-lock.json`).
+- Locks: track pin files for reproducibility (e.g., `~/.config/nvim/lazy-lock.json`). The backup config’s lockfile is ignored (`~/.config/nvim.backup/lazy-lock.json`).
 - Per‑dir ignores: keep generated artifacts out of the repo.
   - `~/.tmux/.gitignore`: ignores `plugins/` (TPM clones).
   - `~/.config/nvim/.gitignore`: ignores `plugin/` and `spell/`.
@@ -44,6 +44,13 @@ If you have your own small Neovim Lua files under `~/.config/nvim/plugin/`, un�
 - `~/.config/ghostty/config`: theme, opacity, split navigation, close surface.
 - `~/.config/ruff/ruff.toml`: Python lint/format defaults.
 - `~/.config/nvim/**`: lazy.nvim plugin specs, LSP/cmp/treesitter configs, lockfile.
+- `~/.config/nvim` (current): NvChad v3 Starter vendored (no submodule). Overrides live in:
+  - `lua/chadrc.lua`: theme/UI (tokyonight, transparency)
+  - `lua/options.lua`: options + Python host
+  - `lua/autocmds.lua`: filetypes (templ)
+  - `lua/configs/lspconfig.lua`: LSP overrides (Ruff/BasedPyright, Tailwind, clangd, etc.)
+  - `lua/plugins/init.lua`: add/override plugins (if needed)
+- `~/.config/nvim.backup` (previous config): original lazy.nvim setup retained for reference.
 - `~/.emacs.d/init.el`: minimal Emacs with evil + org.
 
 ## Shortcuts
@@ -69,6 +76,21 @@ If you have your own small Neovim Lua files under `~/.config/nvim/plugin/`, un�
 - Leader: Space
 - Telescope: `<leader>ff` files, `fb` buffers, `fg` live grep, `fh` help, `fn` file browser
 - LSP/completion via mason + cmp; treesitter for syntax; which-key/lualine UI
+
+#### Neovim: Theme & Transparency
+- Theme: tokyonight via NvChad base46.
+- Transparency: enabled (Normal/NormalNC/NormalFloat/FloatBorder/SignColumn/EndOfBuffer are `NONE`).
+- If theme doesn’t change or transparency doesn’t apply:
+  - Clear cache: `rm -rf ~/.local/share/nvim/base46` and restart Neovim.
+  - Ensure terminal supports transparency (e.g., Ghostty `background-opacity`, iTerm2 window transparency).
+
+#### Neovim: LSP & Python
+- Python host: `vim.g.python3_host_prog = ~/.venvs/nvim/bin/python`.
+- Ruff LSP: runs from project `.venv` (`python -m ruff server`), formats on save when supported.
+- BasedPyright: launched via `uv run basedpyright-langserver --stdio`; analysis `pythonPath` points to project `.venv` if present.
+- Tailwind: maps `templ` to `html`.
+- templ/jsonls/yamlls/clangd/hls/rust_analyzer/lua_ls configured; clangd uses utf-16 offsets and stricter flags.
+- Check with `:LspInfo` inside a buffer.
 
 ### Emacs
 - Focused on Org mode (with evil keybindings); minimal elsewhere
