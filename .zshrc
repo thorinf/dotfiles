@@ -70,6 +70,6 @@ zstyle ':completion:*' menu no
 alias ls='ls --color'
 alias vim='nvim'
 alias c='clear'
-
+alias smi='watch -n 0.1 nvidia-smi'
 
 alias dotfiles='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
