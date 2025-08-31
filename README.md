@@ -118,6 +118,35 @@ Verify in Neovim:
 
 Note: This venv is only for Neovim’s Python provider. LSP tools like Ruff/BasedPyright run from your project’s `.venv` and are independent of the host venv.
 
+##### Project venv (Ruff/BasedPyright)
+Each project should have its own `.venv` so LSP tools match the project’s dependencies and Python version.
+
+Create and install with uv (recommended):
+
+```bash
+cd /path/to/project
+uv venv .venv
+uv pip install -U ruff basedpyright
+```
+
+Using system Python:
+
+```bash
+cd /path/to/project
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -U ruff basedpyright
+```
+
+Verification:
+
+```bash
+.venv/bin/python -m ruff --version
+uv run basedpyright-langserver --version  # or .venv/bin/basedpyright-langserver --version
+```
+
+In Neovim, open a Python file and run `:LspInfo`—you should see both `ruff` and `basedpyright` attached.
+
 ### Emacs
 - Focused on Org mode (with evil keybindings); minimal elsewhere
 - Org indentation/visual tweaks; evil-org for better navigation
