@@ -68,6 +68,13 @@ If you have your own small Neovim Lua files under `~/.config/nvim/plugin/`, unâ€
   - Example invocation: `shortcuts run "Start Pomodoro 1" --input-string 25` (25 minutes)
   - If you renamed the shortcut, update the alias in `~/.zshrc` accordingly.
 
+##### Pomodoro (passing minutes from CLI)
+- Shortcuts CLI: `shortcuts run "Start Pomodoro" --input-string 25`
+- URL scheme: `open 'shortcuts://run-shortcut?name=Start%20Pomodoro&input=25'`
+- AppleScript: `osascript -e 'tell application "Shortcuts Events" to run the shortcut named "Start Pomodoro" with input "25"'`
+
+Your shortcut must consume "Shortcut Input" to use the CLI value; otherwise it will prompt interactively.
+
 ### TMUX
 - Prefix: Ctrl+a (send-prefix on Ctrl+a)
 - Panes: h/j/k/l or Alt+Arrow; split: `-`/`|` or `"`/`%`; new window: `c`
