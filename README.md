@@ -92,6 +92,32 @@ If you have your own small Neovim Lua files under `~/.config/nvim/plugin/`, un�
 - templ/jsonls/yamlls/clangd/hls/rust_analyzer/lua_ls configured; clangd uses utf-16 offsets and stricter flags.
 - Check with `:LspInfo` inside a buffer.
 
+##### Python provider setup (host venv)
+Neovim’s Python provider uses a dedicated venv at `~/.venvs/nvim`:
+
+Using uv (recommended):
+
+```bash
+uv venv ~/.venvs/nvim
+uv pip install -U pip pynvim
+```
+
+Using system Python:
+
+```bash
+python3 -m venv ~/.venvs/nvim
+~/.venvs/nvim/bin/pip install -U pip pynvim
+```
+
+Verify in Neovim:
+
+```vim
+:echo g:python3_host_prog
+:checkhealth provider
+```
+
+Note: This venv is only for Neovim’s Python provider. LSP tools like Ruff/BasedPyright run from your project’s `.venv` and are independent of the host venv.
+
 ### Emacs
 - Focused on Org mode (with evil keybindings); minimal elsewhere
 - Org indentation/visual tweaks; evil-org for better navigation
