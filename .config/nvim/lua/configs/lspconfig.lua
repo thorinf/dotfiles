@@ -105,9 +105,10 @@ lspconfig.ruff.setup({
     end
   end,
   capabilities = capabilities,
-  on_new_config = function(new_config, root_dir)
-    new_config.cmd = { project_python(root_dir), "-m", "ruff", "server" }
-  end,
+  -- Use Mason's global ruff instead of project-specific
+  -- on_new_config = function(new_config, root_dir)
+  --   new_config.cmd = { project_python(root_dir), "-m", "ruff", "server" }
+  -- end,
 })
 
 -- Python: BasedPyright (types)
@@ -115,7 +116,7 @@ local configs = require("lspconfig.configs")
 if not configs.basedpyright then
   configs.basedpyright = {
     default_config = {
-      cmd = { "uv", "run", "basedpyright-langserver", "--stdio" },
+      cmd = { "basedpyright-langserver", "--stdio" },
       filetypes = { "python" },
       root_dir = util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git"),
       settings = {},

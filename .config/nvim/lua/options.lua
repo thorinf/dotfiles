@@ -2,6 +2,9 @@ require "nvchad.options"
 
 -- add yours here!
 
+-- Enable relative line numbers
+vim.wo.relativenumber = true
+
 -- Python provider via uv-managed venv
 vim.g.python3_host_prog = os.getenv("HOME") .. "/.venvs/nvim/bin/python"
 
