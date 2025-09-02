@@ -111,26 +111,26 @@ lspconfig.ruff.setup({
   -- end,
 })
 
--- Python: BasedPyright (types)
-local configs = require("lspconfig.configs")
-if not configs.basedpyright then
-  configs.basedpyright = {
-    default_config = {
-      cmd = { "basedpyright-langserver", "--stdio" },
-      filetypes = { "python" },
-      root_dir = util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git"),
-      settings = {},
-    },
-  }
-end
-
-lspconfig.basedpyright.setup({
-  on_attach = on_attach,
-  capabilities = capabilities,
-  settings = { python = {} },
-  on_new_config = function(new_config, root_dir)
-    new_config.settings.python.pythonPath = project_python(root_dir)
-  end,
-})
+-- Python: BasedPyright (types) - commented out for less strict ML work
+-- local configs = require("lspconfig.configs")
+-- if not configs.basedpyright then
+--   configs.basedpyright = {
+--     default_config = {
+--       cmd = { "basedpyright-langserver", "--stdio" },
+--       filetypes = { "python" },
+--       root_dir = util.root_pattern("pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git"),
+--       settings = {},
+--     },
+--   }
+-- end
+--
+-- lspconfig.basedpyright.setup({
+--   on_attach = on_attach,
+--   capabilities = capabilities,
+--   settings = { python = {} },
+--   on_new_config = function(new_config, root_dir)
+--     new_config.settings.python.pythonPath = project_python(root_dir)
+--   end,
+-- })
 
 -- read :h vim.lsp.config for changing options of lsp servers
