@@ -1,10 +1,14 @@
 # font
+font-family = "SF Mono"
 font-size = 14
 
 # appearance
-theme = tokyonight
-background-opacity = 0.95
-window-decoration = false
+theme = catppuccin-mocha
+macos-titlebar-style = hidden
+window-padding-x = 0  
+window-padding-y = 0
+window-padding-balance = true
+window-padding-color = extend
 
 # behavior
 mouse-hide-while-typing = true
@@ -22,3 +26,4 @@ keybind = cmd+shift+d=new_split:down
 
 # window management
 keybind = cmd+w=close_surface
+
