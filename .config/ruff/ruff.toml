@@ -1,8 +1,10 @@
 line-length = 120
 target-version = "py310"
- 
+
 [lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+# Common relaxed rules for ML work
+select = ["E", "W", "F", "UP"]
+ignore = ["E501", "W503"]
 
 [format]
-quote-style = "single"
+quote-style = "double"
