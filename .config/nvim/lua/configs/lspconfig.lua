@@ -88,24 +88,11 @@ lspconfig.hls.setup({
   capabilities = capabilities,
 })
 
--- Python: Ruff LSP (lint/format/code actions)
-local ruff_fmt_group = vim.api.nvim_create_augroup("RuffFormatOnSave", { clear = true })
+-- Python: Ruff LSP (lint/code actions). Formatting is handled by conform.nvim.
 lspconfig.ruff.setup({
-  on_attach = function(client, bufnr)
-    if on_attach then on_attach(client, bufnr) end
-    if client.supports_method("textDocument/formatting") then
-      vim.api.nvim_clear_autocmds({ group = ruff_fmt_group, buffer = bufnr })
-      vim.api.nvim_create_autocmd("BufWritePre", {
-        group = ruff_fmt_group,
-        buffer = bufnr,
-        callback = function()
-          vim.lsp.buf.format({ bufnr = bufnr, id = client.id })
-        end,
-      })
-    end
-  end,
+  on_attach = on_attach,
   capabilities = capabilities,
-  -- Use Mason's global ruff instead of project-specific
+  -- Use Mason/global ruff-lsp; rely on conform.nvim for formatting on save.
   -- on_new_config = function(new_config, root_dir)
   --   new_config.cmd = { project_python(root_dir), "-m", "ruff", "server" }
   -- end,
