@@ -6,6 +6,7 @@ font-thicken = false
 # appearance
 theme = catppuccin-mocha
 macos-titlebar-style = hidden
+gtk-titlebar = false
 window-padding-x = 0  
 window-padding-y = 0
 window-padding-balance = true
@@ -14,8 +15,7 @@ window-padding-color = extend
 # behavior
 mouse-hide-while-typing = true
 copy-on-select = true
-detect-urls = true
-scrollback-lines = 200000
+scrollback-limit = 1000000
 unfocused-split-opacity = 0.8
 auto-update = check
 
