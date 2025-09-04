@@ -14,6 +14,10 @@ window-padding-color = extend
 # behavior
 mouse-hide-while-typing = true
 copy-on-select = true
+detect-urls = true
+scrollback-lines = 200000
+unfocused-split-opacity = 0.8
+auto-update = check
 
 # keybindings for pane navigation
 keybind = cmd+left=goto_split:left
@@ -27,4 +31,3 @@ keybind = cmd+shift+d=new_split:down
 
 # window management
 keybind = cmd+w=close_surface
-
