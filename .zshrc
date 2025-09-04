@@ -14,31 +14,33 @@ fi
 export EDITOR=nvim
 export PATH="$HOME/.npm-global/bin:$PATH"
 
-# zinit setup
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+# zinit, plugins, and completion (interactive shells only)
+if [[ $- == *i* ]]; then
+  ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+  if [ ! -d "$ZINIT_HOME" ]; then
+     mkdir -p "$(dirname "$ZINIT_HOME")"
+     git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+  fi
+  source "${ZINIT_HOME}/zinit.zsh"
 
-if [ ! -d "$ZINIT_HOME" ]; then
-   mkdir -p "$(dirname "$ZINIT_HOME")"
-   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+  # theme
+  zinit ice depth=1; zinit light romkatv/powerlevel10k
+
+  # plugins
+  zinit light zsh-users/zsh-syntax-highlighting
+  zinit light zsh-users/zsh-completions
+  zinit light zsh-users/zsh-autosuggestions
+
+  # completions
+  export ZSH_DISABLE_COMPFIX=true
+  autoload -Uz compinit
+  compinit -C -d "${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump-$ZSH_VERSION"
+
+  zinit cdreplay -q
+
+  # load p10k config
+  [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 fi
-
-source "${ZINIT_HOME}/zinit.zsh"
-
-# theme
-zinit ice depth=1; zinit light romkatv/powerlevel10k
-
-# plugins
-zinit light zsh-users/zsh-syntax-highlighting
-zinit light zsh-users/zsh-completions
-zinit light zsh-users/zsh-autosuggestions
-
-# completions
-autoload -Uz compinit && compinit
-
-zinit cdreplay -q
-
-# load p10k config
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # keybindings
 bindkey -e
@@ -67,10 +69,19 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
 
 # aliases
-alias ls='ls --color'
+# portable `ls` with colors
+if command -v gls >/dev/null 2>&1; then
+  alias ls='gls --color=auto'
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  alias ls='ls -G'
+else
+  alias ls='ls --color=auto'
+fi
 alias vim='nvim'
 alias c='clear'
-alias smi='watch -n 0.1 nvidia-smi'
+if command -v nvidia-smi >/dev/null 2>&1; then
+  alias smi='watch -n 0.1 nvidia-smi'
+fi
 
 alias dotfiles='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 
