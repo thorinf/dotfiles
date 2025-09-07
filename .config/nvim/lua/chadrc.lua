@@ -14,11 +14,10 @@ M.base46 = {
 	-- },
 }
 
--- M.nvdash = { load_on_startup = true }
--- M.ui = {
---       tabufline = {
---          lazyload = false
---      }
--- }
+-- Prefer external statusline (lualine) on Neovim 0.9.x to avoid LspProgress usage
+-- from nvchad/ui on newer branches.
+M.ui = {
+  statusline = { enabled = false },
+}
 
 return M

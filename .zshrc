@@ -26,15 +26,33 @@ if [[ $- == *i* ]]; then
   # theme
   zinit ice depth=1; zinit light romkatv/powerlevel10k
 
-  # plugins
-  zinit light zsh-users/zsh-syntax-highlighting
+  # plugins (order matters)
+  # 1) completions  2) autosuggestions  3) syntax-highlighting (last)
   zinit light zsh-users/zsh-completions
   zinit light zsh-users/zsh-autosuggestions
+  zinit light zsh-users/zsh-syntax-highlighting
 
-  # completions
-  export ZSH_DISABLE_COMPFIX=true
-  autoload -Uz compinit
-  compinit -C -d "${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump-$ZSH_VERSION"
+  # completions (secure compinit)
+  autoload -Uz compinit compaudit
+  _zcompdump="${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump-$ZSH_VERSION"
+
+  # Attempt to fix insecure completion dirs owned by this user; else ignore them with a warning.
+  _insecure=($(compaudit 2>/dev/null))
+  if (( ${#_insecure[@]} )); then
+    for p in "${_insecure[@]}"; do
+      if [ -O "$p" ]; then chmod -R go-w "$p" 2>/dev/null || true; fi
+    done
+    _insecure=($(compaudit 2>/dev/null))
+    if (( ${#_insecure[@]} )); then
+      print -P '%F{yellow}zsh compinit: insecure completion dirs remain; disabling them:%f' >&2
+      printf '  %s\n' "${_insecure[@]}" >&2
+      compinit -i -d "$_zcompdump"
+    else
+      compinit -d "$_zcompdump"
+    fi
+  else
+    compinit -d "$_zcompdump"
+  fi
 
   zinit cdreplay -q
 
@@ -51,12 +69,18 @@ bindkey '^[w' kill-region
 zle_highlight+=(paste:none)
 
 # history
-HISTSIZE=5000
+HISTSIZE=100000
 HISTFILE=~/.zsh_history
 SAVEHIST=$HISTSIZE
+HISTFILESIZE=200000
 HISTDUP=erase
+# robust, timestamped, low-dup history with immediate append
+setopt extended_history
+setopt inc_append_history
 setopt appendhistory
 setopt sharehistory
+setopt hist_reduce_blanks
+setopt hist_verify
 setopt hist_ignore_space
 setopt hist_ignore_all_dups
 setopt hist_save_no_dups

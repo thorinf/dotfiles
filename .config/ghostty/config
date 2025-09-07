@@ -1,3 +1,5 @@
+# Note: auto-update works only on macOS; ignored on Linux.
+# Note: GTK titlebar behavior can vary across desktops/versions.
 # font
 font-family = "SF Mono"
 font-size = 12

@@ -5,8 +5,15 @@ require "nvchad.options"
 -- Enable relative line numbers
 vim.wo.relativenumber = true
 
--- Python provider via uv-managed venv
-vim.g.python3_host_prog = os.getenv("HOME") .. "/.venvs/nvim/bin/python"
+-- Python provider: prefer ~/.venvs/nvim/bin/python if it exists; else fallback to system python3
+do
+  local venv_python = os.getenv("HOME") .. "/.venvs/nvim/bin/python"
+  if vim.fn.executable(venv_python) == 1 then
+    vim.g.python3_host_prog = venv_python
+  else
+    vim.g.python3_host_prog = "python3"
+  end
+end
 
 -- Force transparent background
 vim.cmd([[
