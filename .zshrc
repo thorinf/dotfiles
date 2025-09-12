@@ -72,19 +72,15 @@ zle_highlight+=(paste:none)
 HISTSIZE=100000
 HISTFILE=~/.zsh_history
 SAVEHIST=$HISTSIZE
-HISTFILESIZE=200000
-HISTDUP=erase
 # robust, timestamped, low-dup history with immediate append
 setopt extended_history
 setopt inc_append_history
-setopt appendhistory
 setopt sharehistory
 setopt hist_reduce_blanks
 setopt hist_verify
 setopt hist_ignore_space
 setopt hist_ignore_all_dups
 setopt hist_save_no_dups
-setopt hist_ignore_dups
 setopt hist_find_no_dups
 
 # completion styling
