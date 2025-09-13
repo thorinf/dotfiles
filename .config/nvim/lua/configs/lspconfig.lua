@@ -3,7 +3,7 @@ local nvlsp = require("nvchad.configs.lspconfig")
 nvlsp.defaults()
 
 local lspconfig = require("lspconfig")
-local on_attach = nvlsp.on_attach
+local base_on_attach = nvlsp.on_attach
 local capabilities = nvlsp.capabilities
 
 -- Helper: resolve project Python interpreter from .venv if present
@@ -89,13 +89,22 @@ lspconfig.hls.setup({
 })
 
 -- Python: Ruff LSP (lint/code actions). Formatting is handled by conform.nvim.
+-- Use the native Ruff server and prefer a project-local Ruff binary (same logic as conform.lua)
+local function prefer_local_ruff_bin(root_dir)
+  local start = root_dir or vim.loop.cwd()
+  local found = vim.fs.find({ ".venv/bin/ruff", "venv/bin/ruff" }, { upward = true, path = start })[1]
+  if found and vim.fn.executable(found) == 1 then
+    return found
+  end
+  return "ruff"
+end
+
 lspconfig.ruff.setup({
   on_attach = on_attach,
   capabilities = capabilities,
-  -- Use Mason/global ruff-lsp; rely on conform.nvim for formatting on save.
-  -- on_new_config = function(new_config, root_dir)
-  --   new_config.cmd = { project_python(root_dir), "-m", "ruff", "server" }
-  -- end,
+  on_new_config = function(new_config, root_dir)
+    new_config.cmd = { prefer_local_ruff_bin(root_dir), "server" }
+  end,
 })
 
 -- Python: Pyright (types)
@@ -117,3 +126,15 @@ lspconfig.pyright.setup({
 })
 
 -- read :h vim.lsp.config for changing options of lsp servers
+-- Compose on_attach to disable Ruff's LSP formatting (Conform handles formatting)
+local function on_attach(client, bufnr)
+  if type(base_on_attach) == "function" then
+    pcall(base_on_attach, client, bufnr)
+  end
+  if client and client.name == "ruff" then
+    if client.server_capabilities then
+      client.server_capabilities.documentFormattingProvider = false
+      client.server_capabilities.documentRangeFormattingProvider = false
+    end
+  end
+end

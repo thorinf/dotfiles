@@ -1,6 +1,6 @@
 # Dotfiles
 
-Bare-repo dotfiles. macOS‑first, no vendored plugins, fast bootstrap.
+Bare‑repo dotfiles. macOS‑first, no vendored plugins, fast bootstrap.
 
 ## Quickstart
 
@@ -13,39 +13,40 @@ dotfiles config status.showUntrackedFiles no
 git config --global core.excludesfile "$HOME/.config/git/ignore"
 ```
 
-Add the alias to `~/.zshrc`. First zsh/tmux session auto‑installs plugin managers (zinit, TPM). Open Neovim once to let lazy.nvim sync.
+Add the alias to `~/.zshrc`. First zsh/tmux session auto‑installs plugin managers (zinit, TPM). Open Neovim once to let lazy.nvim sync and let Mason install tools.
+
+## Install
+
+- macOS (Homebrew): `brew install git zsh tmux neovim`
+- Linux: use your package manager to install `git zsh tmux neovim`
+- Open Neovim once: plugins sync; tools auto‑install via mason‑tool‑installer
+
+Mason tools ensured: `ruff`, `pyright`, `lua-language-server`, `rust-analyzer`, `tailwindcss-language-server`, `json-lsp`, `yaml-language-server`, `clangd`, `haskell-language-server`, `templ`.
+
+## What You Get
+
+- Shell: zsh + zinit + Powerlevel10k, Ctrl+p/Ctrl+n history search, sane history and completion.
+- Tmux: Ctrl+a prefix, truecolor (`tmux-256color` + RGB), OSC‑52 clipboard, TPM auto‑install.
+- Terminal: Ghostty settings (optional), large scrollback, update checks.
+- Neovim: NvChad (v2.5) via lazy.nvim; Ruff for lint+format, Pyright for types. Conform and LSP use the same Ruff binary (prefers project `.venv/bin/ruff`).
+- Consistency: `.editorconfig` and `.inputrc`.
 
 ## Requirements
 
 - git, zsh, tmux, neovim (0.9+)
 - macOS: Homebrew recommended; Ghostty optional
 
-## What you get
-
-- Shell: zsh + zinit + Powerlevel10k, Ctrl+p/Ctrl+n history search, sane history and completion.
-- Tmux: Ctrl+a prefix, truecolor (`tmux-256color` + RGB), OSC‑52 clipboard, TPM auto‑install.
-- Terminal: Ghostty with URL detection, 200k scrollback, 0.8 unfocused opacity, update checks.
-- Neovim: NvChad (v2.5) via lazy.nvim; format‑on‑save with Conform (prefers project `.venv/bin/ruff`).
-- Consistency: `.editorconfig` (indent/newlines) and `.inputrc` (readline vi‑mode + smarter history).
-- Python tooling: `ruff` and BasedPyright defaults in `~/.config/{ruff,basedpyright}`.
-
 ## Policy
 
-- Do not vendor plugin repos (tmux TPM, zinit, Neovim plugins).
-- Track `~/.config/nvim/lazy-lock.json`; ignore the backup config’s lockfile.
+- No vendored plugin repos (tmux TPM, zinit, Neovim plugins).
+- Track `~/.config/nvim/lazy-lock.json`; ignore backup lockfiles.
 - Per‑dir `.gitignore` keeps caches/artifacts out (TPM plugins, zinit, Emacs caches, etc.).
-
-## Layout
-
-- `~/.config/nvim/**`: current config (NvChad base) + `lazy-lock.json`.
-- `~/.config/nvim.backup/**`: legacy config kept for reference (safe to delete if unused).
-- `~/.config/tmux/tmux.conf`, `~/.config/ghostty/config`, `~/.zshrc`, `.editorconfig`, `.inputrc`, `.clang-*`.
 
 ## Notes
 
 - Local‑only ignores: use `~/.dotfiles/info/exclude` for host‑specific patterns.
 - Terminfo: prefers `tmux-256color`; falls back to `screen-256color`.
 
-## How it works
+## How It Works
 
 `~/.dotfiles` is a bare repo with `$HOME` as work tree, so only selected files are versioned.
