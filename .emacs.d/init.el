@@ -14,6 +14,12 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+;; force terminal mode
+(setq inhibit-startup-screen t)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+
 ;; evil mode (vim emulation)
 (use-package evil
   :config
@@ -38,8 +44,18 @@
 ;; enable org-indent-mode for cleaner structure visualization
 (add-hook 'org-mode-hook #'org-indent-mode)
 
-(custom-set-variables '(package-selected-packages '(evil-org org-roam evil)))
-(custom-set-faces)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages '(evil-org org-roam evil)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
 
 (with-eval-after-load 'org
   (evil-define-key 'normal org-mode-map (kbd "TAB") 'org-cycle))

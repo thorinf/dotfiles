@@ -98,6 +98,7 @@ else
   alias ls='ls --color=auto'
 fi
 alias vim='nvim'
+alias emacs='emacs -nw'
 alias c='clear'
 if command -v nvidia-smi >/dev/null 2>&1; then
   alias smi='watch -n 0.1 nvidia-smi'
