@@ -1,7 +1,7 @@
 # Note: auto-update works only on macOS; ignored on Linux.
 # Note: GTK titlebar behavior can vary across desktops/versions.
 # font
-font-family = "SF Mono"
+font-family = "UbuntuMono Nerd Font Mono"
 font-size = 12
 font-thicken = false
 
@@ -9,10 +9,6 @@ font-thicken = false
 theme = catppuccin-mocha
 macos-titlebar-style = hidden
 gtk-titlebar = false
-window-padding-x = 0  
-window-padding-y = 0
-window-padding-balance = true
-window-padding-color = extend
 
 # behavior
 mouse-hide-while-typing = true
