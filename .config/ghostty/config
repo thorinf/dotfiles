@@ -4,14 +4,17 @@ font-size = 12
 font-thicken = false
 
 # appearance
-theme = catppuccin-mocha
-background = #1e1e2e
+theme = catpuccin-mocha
+background = #1E1E2E
 background-opacity = 0.95
 background-blur-radius = 20
 macos-titlebar-style = hidden
 # Note: GTK titlebar behavior can vary across desktops/versions.
 gtk-titlebar = false
 window-decoration = false
+window-padding-x = 8
+window-padding-y = 8
+windows-padding-balance = true
 
 # behavior
 mouse-hide-while-typing = true
