@@ -4,7 +4,6 @@ font-size = 12
 font-thicken = false
 
 # appearance
-theme = catpuccin-mocha
 background = #1E1E2E
 background-opacity = 0.95
 background-blur-radius = 20
@@ -14,7 +13,7 @@ gtk-titlebar = false
 window-decoration = false
 window-padding-x = 8
 window-padding-y = 8
-windows-padding-balance = true
+window-padding-balance = true
 
 # behavior
 mouse-hide-while-typing = true
