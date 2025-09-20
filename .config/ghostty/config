@@ -4,7 +4,7 @@ font-size = 12
 font-thicken = false
 
 # appearance
-background = #1E1E2E
+background = #16181a
 background-opacity = 0.95
 background-blur-radius = 20
 macos-titlebar-style = hidden
