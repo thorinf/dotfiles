@@ -3,8 +3,8 @@ font-family = "JetBrainsMono Nerd Font Mono"
 font-size = 12
 font-thicken = false
 
-# appearance
-background = #16181a
+# appearance - cyberdream theme
+theme = cyberdream
 background-opacity = 0.95
 background-blur-radius = 20
 macos-titlebar-style = hidden
