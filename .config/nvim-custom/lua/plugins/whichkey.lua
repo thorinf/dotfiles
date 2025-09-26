@@ -17,6 +17,7 @@ return {
       { "<leader>g", group = "Git" },
       { "<leader>h", group = "Harpoon" },
       { "<leader>l", group = "LSP" },
+      { "<leader>o", group = "Obsidian" },
     },
     show_help = true,
     show_keys = true,

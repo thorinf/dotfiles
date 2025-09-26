@@ -9,6 +9,5 @@ require("lazy").setup({
   spec = {
     { import = "plugins" }, -- loads all files under lua/plugins/
   },
-  install = { colorscheme = { "habamax" } },
   checker = { enabled = true },
 })
