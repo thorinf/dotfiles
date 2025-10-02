@@ -28,6 +28,3 @@
 !/.clang-format
 !/.editorconfig
 !/.inputrc
-
-# Ignore backup config lockfile
-/.config/nvim.backup/lazy-lock.json
