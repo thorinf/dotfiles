@@ -1,5 +1,6 @@
 return {
   "saghen/blink.cmp",
+  event = "InsertEnter",
   version = "v1.*",
   dependencies = {
     {
@@ -11,9 +12,7 @@ return {
       },
       config = function(_, opts)
         local luasnip = require("luasnip")
-
         luasnip.config.set_config(opts)
-        luasnip.config.setup({})
 
         local loaders = require("luasnip.loaders.from_vscode")
         loaders.lazy_load()
@@ -34,7 +33,40 @@ return {
       nerd_font_variant = "mono",
     },
     completion = {
-      documentation = { auto_show = true },
+      menu = {
+        scrollbar = false,
+        border = {
+          { "󱐋", "WarningMsg" },
+          "─",
+          "╮",
+          "│",
+          "╯",
+          "─",
+          "╰",
+          "│",
+        },
+      },
+      documentation = {
+        auto_show = true,
+        window = {
+          border = {
+            { "", "DiagnosticHint" },
+            "─",
+            "╮",
+            "│",
+            "╯",
+            "─",
+            "╰",
+            "│",
+          },
+        },
+      },
+    },
+    cmdline = {
+      completion = {
+        menu = { auto_show = true },
+      },
+      sources = {},
     },
     sources = {
       default = { "snippets", "lsp", "path", "buffer" },
