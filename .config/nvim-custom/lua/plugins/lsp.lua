@@ -3,17 +3,27 @@ local function prefer_local_ruff(start)
   if not search_from or search_from == "" then
     search_from = vim.loop.cwd()
   end
+
+  -- Check for ruff.toml or uv project first
+  local ruff_config = vim.fs.find({ "ruff.toml", "pyproject.toml" }, { upward = true, path = search_from })[1]
+  if ruff_config and vim.fn.executable("uv") == 1 then
+    return { cmd = "uv", args = { "run", "ruff" } }
+  end
+
+  -- Fallback to local venv
   local found = vim.fs.find({ ".venv/bin/ruff", "venv/bin/ruff" }, { upward = true, path = search_from })[1]
   if found and vim.fn.executable(found) == 1 then
-    return found
+    return { cmd = found }
   end
-  return "ruff"
+
+  return { cmd = "ruff" }
 end
 -- note: if formatting ever feels slow, cache the resolved path per root before returning
 
 return {
   {
     "stevearc/conform.nvim",
+    event = { "BufReadPre", "BufNewFile" },
     opts = {
       format_on_save = { timeout_ms = 500, lsp_format = "fallback" },
       formatters_by_ft = {
@@ -26,13 +36,31 @@ return {
       },
       formatters = {
         ruff_fix = {
-          command = function()
-            return prefer_local_ruff(vim.fn.expand("%:p:h"))
+          command = function(ctx)
+            local resolved = prefer_local_ruff(ctx.dirname)
+            return resolved.cmd
+          end,
+          args = function(ctx)
+            local resolved = prefer_local_ruff(ctx.dirname)
+            local base_args = vim.deepcopy(require("conform.formatters.ruff_fix").args)
+            if resolved.args then
+              return vim.list_extend(vim.deepcopy(resolved.args), base_args)
+            end
+            return base_args
           end,
         },
         ruff_format = {
-          command = function()
-            return prefer_local_ruff(vim.fn.expand("%:p:h"))
+          command = function(ctx)
+            local resolved = prefer_local_ruff(ctx.dirname)
+            return resolved.cmd
+          end,
+          args = function(ctx)
+            local resolved = prefer_local_ruff(ctx.dirname)
+            local base_args = vim.deepcopy(require("conform.formatters.ruff_format").args)
+            if resolved.args then
+              return vim.list_extend(vim.deepcopy(resolved.args), base_args)
+            end
+            return base_args
           end,
         },
       },
@@ -165,21 +193,30 @@ return {
         },
         ruff = {
           on_new_config = function(new_config, root_dir)
-            new_config.cmd = { prefer_local_ruff(root_dir), "server" }
+            local resolved = prefer_local_ruff(root_dir)
+            local cmd = { resolved.cmd }
+            if resolved.args then
+              vim.list_extend(cmd, resolved.args)
+            end
+            table.insert(cmd, "server")
+            new_config.cmd = cmd
           end,
         },
         pyright = {
-          settings = {
-            python = {
-              analysis = {
-                autoSearchPaths = true,
-                useLibraryCodeForTypes = true,
-                diagnosticMode = "workspace",
-              },
-            },
-          },
           on_new_config = function(new_config, root_dir)
-            new_config.settings.python.pythonPath = project_python(root_dir)
+            local interpreter = project_python(root_dir)
+            new_config.settings = new_config.settings or {}
+            local python_settings = vim.tbl_deep_extend("force", new_config.settings.python or {}, {
+              venvPath = root_dir,
+              venv = ".venv",
+              defaultInterpreterPath = interpreter,
+            })
+            python_settings.analysis = vim.tbl_deep_extend("force", python_settings.analysis or {}, {
+              autoSearchPaths = true,
+              useLibraryCodeForTypes = true,
+              diagnosticMode = "workspace",
+            })
+            new_config.settings.python = python_settings
           end,
         },
         yamlls = {
