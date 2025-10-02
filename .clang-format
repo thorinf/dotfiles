@@ -1,3 +1,6 @@
 # Minimal global clang-format
 BasedOnStyle: LLVM
 ColumnLimit: 120
+AllowShortIfStatementsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortFunctionsOnASingleLine: All
