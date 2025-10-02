@@ -1,6 +1,6 @@
 # Dotfiles
 
-Bare‑repo dotfiles. macOS‑first, no vendored plugins, fast bootstrap.
+Bare git‑repo managing just the configs I actually use. macOS‑leaning but works fine on Linux.
 
 ## Quickstart
 
@@ -13,23 +13,25 @@ dotfiles config status.showUntrackedFiles no
 git config --global core.excludesfile "$HOME/.config/git/ignore"
 ```
 
-Add the alias to `~/.zshrc`. First zsh/tmux session auto‑installs plugin managers (zinit, TPM). Open Neovim once to let lazy.nvim sync and let Mason install tools.
+Add the alias to `~/.zshrc`:
+```bash
+alias dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+```
+First zsh/tmux session installs plugin managers (zinit, TPM). Open Neovim once so lazy.nvim synchronises plugins and Mason installs language tools.
 
 ## Install
 
 - macOS (Homebrew): `brew install git zsh tmux neovim`
-- Linux: use your package manager to install `git zsh tmux neovim`
-- Open Neovim once: plugins sync; tools auto‑install via mason‑tool‑installer
-
-Mason tools ensured: `ruff`, `pyright`, `lua-language-server`, `rust-analyzer`, `tailwindcss-language-server`, `json-lsp`, `yaml-language-server`, `clangd`, `haskell-language-server`, `templ`.
+- Linux: install `git zsh tmux neovim` with your package manager
+- Launch Neovim once; lazy.nvim installs plugins and Mason pulls required LSP/formatter binaries (`ruff`, `pyright`, `lua_ls`, `clangd`, `yamlls`, `jsonls`, `bashls`, etc.).
 
 ## What You Get
 
-- Shell: zsh + zinit + Powerlevel10k, Ctrl+p/Ctrl+n history search, sane history and completion.
-- Tmux: Ctrl+a prefix, truecolor (`tmux-256color` + RGB), OSC‑52 clipboard, TPM auto‑install.
-- Terminal: Ghostty settings (optional), large scrollback, update checks.
-- Neovim: NvChad (v2.5) via lazy.nvim; Ruff for lint+format, Pyright for types. Conform and LSP use the same Ruff binary (prefers project `.venv/bin/ruff`).
-- Consistency: `.editorconfig` and `.inputrc`.
+- Shell: zsh + zinit + Powerlevel10k, Ctrl+p/Ctrl+n history search, and trimmed history options.
+- Tmux: Ctrl+a prefix, truecolor terminfo, OSC‑52 clipboard, TPM autoload.
+- Terminal: Ghostty profile (optional), sensible defaults, no vendor lock‑in.
+- Neovim: custom Lua config on lazy.nvim (blink.cmp, gitsigns, oil, telescope, treesitter, statusline). Ruff + Conform share the same resolver (prefers project `.venv` or `uv run ruff`).
+- Consistency: `.editorconfig`, `.inputrc`, clang format/tidy defaults.
 
 ## Requirements
 
@@ -39,13 +41,13 @@ Mason tools ensured: `ruff`, `pyright`, `lua-language-server`, `rust-analyzer`, 
 ## Policy
 
 - No vendored plugin repos (tmux TPM, zinit, Neovim plugins).
-- Track `~/.config/nvim/lazy-lock.json`; ignore backup lockfiles.
-- Per‑dir `.gitignore` keeps caches/artifacts out (TPM plugins, zinit, Emacs caches, etc.).
+- Track `~/.config/nvim/lazy-lock.json`; everything else under plugin/state dirs is ignored.
+- Per‑dir `.gitignore` keeps caches and compiled artifacts out.
 
 ## Notes
 
-- Local‑only ignores: use `~/.dotfiles/info/exclude` for host‑specific patterns.
-- Terminfo: prefers `tmux-256color`; falls back to `screen-256color`.
+- Host‑specific ignores live in `~/.dotfiles/info/exclude`.
+- Terminfo: prefers `tmux-256color`, falls back to `screen-256color` if missing.
 
 ## How It Works
 
