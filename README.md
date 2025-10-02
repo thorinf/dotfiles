@@ -28,7 +28,7 @@ First zsh/tmux session installs plugin managers (zinit, TPM). Open Neovim once s
 ## What You Get
 
 - Shell: zsh + zinit + Powerlevel10k, Ctrl+p/Ctrl+n history search, and trimmed history options.
-- Tmux: Ctrl+a prefix, truecolor terminfo, OSC‑52 clipboard, TPM autoload.
+- Tmux: Ctrl+s prefix, truecolor terminfo, OSC‑52 clipboard, TPM autoload.
 - Terminal: Ghostty profile (optional), sensible defaults, no vendor lock‑in.
 - Neovim: custom Lua config on lazy.nvim (blink.cmp, gitsigns, oil, telescope, treesitter, statusline). Ruff + Conform share the same resolver (prefers project `.venv` or `uv run ruff`).
 - Consistency: `.editorconfig`, `.inputrc`, clang format/tidy defaults.
