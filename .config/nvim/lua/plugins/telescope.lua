@@ -74,5 +74,12 @@ return {
       end,
       desc = "Live grep config",
     },
+    {
+      "<leader>f.",
+      function()
+        require("telescope.builtin").find_files({ hidden = true })
+      end,
+      desc = "Find files (hidden)",
+    },
   },
 }
