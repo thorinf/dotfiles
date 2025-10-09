@@ -161,12 +161,6 @@ return {
         lsp_map("<leader>ss", vim.lsp.buf.document_symbol, "Search Symbols")
       end
 
-      -- Helper: resolve project Python interpreter from .venv if present
-      local function project_python(root)
-        local p = root .. "/.venv/bin/python"
-        return (vim.fn.executable(p) == 1) and p or "python3"
-      end
-
       local servers = {
         clangd = {
           filetypes = { "c", "cpp", "proto" },
@@ -202,22 +196,16 @@ return {
             new_config.cmd = cmd
           end,
         },
-        pyright = {
-          on_new_config = function(new_config, root_dir)
-            local interpreter = project_python(root_dir)
-            new_config.settings = new_config.settings or {}
-            local python_settings = vim.tbl_deep_extend("force", new_config.settings.python or {}, {
-              venvPath = root_dir,
-              venv = ".venv",
-              defaultInterpreterPath = interpreter,
-            })
-            python_settings.analysis = vim.tbl_deep_extend("force", python_settings.analysis or {}, {
-              autoSearchPaths = true,
-              useLibraryCodeForTypes = true,
-              diagnosticMode = "workspace",
-            })
-            new_config.settings.python = python_settings
-          end,
+        basedpyright = {
+          settings = {
+            basedpyright = {
+              analysis = {
+                autoSearchPaths = true,
+                useLibraryCodeForTypes = true,
+                diagnosticMode = "workspace",
+              },
+            },
+          },
         },
         yamlls = {
           settings = {
@@ -232,7 +220,7 @@ return {
       }
 
       mason_lspconfig.setup({
-        ensure_installed = { "clangd", "lua_ls", "bashls", "ruff", "pyright", "yamlls", "jsonls" },
+        ensure_installed = { "clangd", "lua_ls", "bashls", "ruff", "basedpyright", "yamlls", "jsonls" },
         handlers = {
           function(server_name)
             local server_opts = vim.tbl_deep_extend("force", {
