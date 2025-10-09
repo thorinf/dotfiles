@@ -35,30 +35,12 @@ return {
     completion = {
       menu = {
         scrollbar = false,
-        border = {
-          { "󱐋", "WarningMsg" },
-          "─",
-          "╮",
-          "│",
-          "╯",
-          "─",
-          "╰",
-          "│",
-        },
+        border = "rounded",
       },
       documentation = {
         auto_show = true,
         window = {
-          border = {
-            { "", "DiagnosticHint" },
-            "─",
-            "╮",
-            "│",
-            "╯",
-            "─",
-            "╰",
-            "│",
-          },
+          border = "rounded",
         },
       },
     },
