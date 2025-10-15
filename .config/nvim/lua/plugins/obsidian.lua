@@ -7,7 +7,7 @@ return {
   opts = {
     legacy_commands = false,
     note_id_func = function(title)
-      local timestamp = os.date "%Y%m%d%H%M"  -- YYYYMMDDHHMM format
+      local timestamp = os.date("%Y%m%d%H%M") -- YYYYMMDDHHMM format
       if title ~= nil and title ~= "" then
         -- Transform title into valid file name suffix
         local suffix = title:gsub(" ", "-"):gsub("[^A-Za-z0-9-]", ""):lower()
