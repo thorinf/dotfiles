@@ -104,8 +104,6 @@ if command -v nvidia-smi >/dev/null 2>&1; then
   alias smi='watch -n 0.1 nvidia-smi'
 fi
 
-alias dotfiles='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-
 # macOS only aliases
 if [[ "$OSTYPE" == "darwin"* ]]; then
   alias pomo='shortcuts run "Start Pomodoro"'
