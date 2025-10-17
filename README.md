@@ -1,6 +1,10 @@
 # Dotfiles
 
 ```bash
-stow nvim shell tmux ghostty  # install packages
-stow -D nvim                   # uninstall
+# install dependencies
+make brew    # macOS
+make apt     # Ubuntu/Debian
+
+# stow dotfiles
+make install
 ```
