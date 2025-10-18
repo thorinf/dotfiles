@@ -68,19 +68,12 @@ return {
       desc = "Help tags",
     },
     {
-      "<leader>fc",
-      function()
-        require("telescope.builtin").live_grep({ cwd = vim.fn.stdpath("config") })
-      end,
-      desc = "Live grep config",
-    },
-    {
       "<leader>fd",
       function()
         -- resolve symlink and go up to dotfiles root
         local config_path = vim.fn.resolve(vim.fn.stdpath("config"))
         local dotfiles_path = vim.fn.fnamemodify(config_path, ":h:h:h")
-        require("telescope.builtin").live_grep({ cwd = dotfiles_path })
+        require("telescope.builtin").live_grep({ cwd = dotfiles_path, hidden = true })
       end,
       desc = "Live grep dotfiles",
     },
