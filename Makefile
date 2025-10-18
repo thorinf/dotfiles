@@ -12,7 +12,7 @@ restow:
 	stow -R $(PACKAGES)
 
 brew:
-	brew install stow neovim tmux
+	brew install stow neovim tmux ripgrep
 
 apt:
-	sudo apt update && sudo apt install -y stow neovim tmux zsh
+	sudo apt update && sudo apt install -y stow neovim tmux zsh ripgrep
