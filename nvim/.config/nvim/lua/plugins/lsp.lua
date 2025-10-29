@@ -100,15 +100,6 @@ return {
       { "williamboman/mason.nvim", config = true },
       "mason-org/mason-lspconfig.nvim",
       {
-        "folke/lazydev.nvim",
-        ft = "lua",
-        opts = {
-          library = {
-            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
-          },
-        },
-      },
-      {
         "aznhe21/actions-preview.nvim",
         event = "LspAttach",
         opts = {
@@ -133,7 +124,14 @@ return {
       local lspconfig = require("lspconfig")
       local mason_lspconfig = require("mason-lspconfig")
 
-      vim.diagnostic.config({ virtual_text = true })
+      vim.diagnostic.config({
+        virtual_text = true,
+        float = { border = "rounded" },
+      })
+
+      local border_opts = { border = "rounded" }
+      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, border_opts)
+      vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, border_opts)
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       local ok_blink, blink = pcall(require, "blink.cmp")
@@ -176,6 +174,12 @@ return {
         lua_ls = {
           settings = {
             Lua = {
+              completion = {
+                callSnippet = "Replace",
+              },
+              diagnostics = {
+                globals = { "vim" },
+              },
               runtime = { version = "LuaJIT" },
               workspace = { checkThirdParty = false },
               telemetry = { enable = false },

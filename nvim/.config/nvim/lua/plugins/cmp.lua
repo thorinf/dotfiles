@@ -22,37 +22,70 @@ return {
       end,
     },
   },
-  opts = {
-    keymap = {
-      preset = "enter",
-      ["<Tab>"] = { "snippet_forward", "select_next", "fallback" },
-      ["<S-Tab>"] = { "snippet_backward", "select_prev", "fallback" },
-    },
-    snippets = { preset = "luasnip" },
-    appearance = {
-      nerd_font_variant = "mono",
-    },
-    completion = {
-      menu = {
-        scrollbar = false,
-        border = "rounded",
+  opts = function()
+    local disabled_ft = {
+      "TelescopePrompt",
+      "grug-far",
+    }
+
+    local function is_enabled()
+      return not vim.tbl_contains(disabled_ft, vim.bo.filetype)
+        and vim.b.completion ~= false
+        and vim.bo.buftype ~= "prompt"
+    end
+
+    return {
+      enabled = is_enabled,
+      keymap = {
+        preset = "enter",
+        ["<Tab>"] = { "snippet_forward", "select_next", "fallback" },
+        ["<S-Tab>"] = { "snippet_backward", "select_prev", "fallback" },
       },
-      documentation = {
-        auto_show = true,
-        window = {
-          border = "rounded",
+      snippets = { preset = "luasnip" },
+      appearance = {
+        nerd_font_variant = "mono",
+      },
+      completion = {
+        menu = {
+          scrollbar = false,
+          auto_show = is_enabled,
+          border = {
+            { "󱐋", "WarningMsg" },
+            "─",
+            "╮",
+            "│",
+            "╯",
+            "─",
+            "╰",
+            "│",
+          },
+        },
+        documentation = {
+          auto_show = true,
+          window = {
+            border = {
+              { "", "DiagnosticHint" },
+              "─",
+              "╮",
+              "│",
+              "╯",
+              "─",
+              "╰",
+              "│",
+            },
+          },
         },
       },
-    },
-    cmdline = {
-      completion = {
-        menu = { auto_show = true },
+      cmdline = {
+        completion = {
+          menu = { auto_show = true },
+        },
+        sources = {},
       },
-      sources = {},
-    },
-    sources = {
-      default = { "snippets", "lsp", "path", "buffer" },
-    },
-  },
+      sources = {
+        default = { "lsp", "snippets", "path", "buffer" },
+      },
+    }
+  end,
   opts_extend = { "sources.default" },
 }
