@@ -16,7 +16,7 @@ return {
 
         local loaders = require("luasnip.loaders.from_vscode")
         loaders.lazy_load()
-        loaders.load({
+        loaders.lazy_load({
           paths = { vim.fs.normalize(vim.fn.stdpath("config") .. "/snippets") },
         })
       end,
@@ -38,8 +38,19 @@ return {
       enabled = is_enabled,
       keymap = {
         preset = "enter",
-        ["<Tab>"] = { "snippet_forward", "select_next", "fallback" },
+        -- vscode style complete keymap
+        ["<Tab>"] = {
+          function(cmp)
+            if cmp.snippet_active() then
+              return cmp.snippet_forward()
+            elseif cmp.is_visible() then
+              return cmp.select_and_accept()
+            end
+          end,
+          "fallback",
+        },
         ["<S-Tab>"] = { "snippet_backward", "select_prev", "fallback" },
+        ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
       },
       snippets = { preset = "luasnip" },
       appearance = {
@@ -48,7 +59,9 @@ return {
       completion = {
         menu = {
           scrollbar = false,
-          auto_show = is_enabled,
+          auto_show = function(ctx)
+            return is_enabled()
+          end,
           border = {
             { "󱐋", "WarningMsg" },
             "─",
@@ -80,7 +93,6 @@ return {
         completion = {
           menu = { auto_show = true },
         },
-        sources = {},
       },
       sources = {
         default = { "lsp", "snippets", "path", "buffer" },
