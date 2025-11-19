@@ -71,22 +71,8 @@ setopt hist_ignore_all_dups
 setopt hist_save_no_dups
 setopt hist_find_no_dups
 
-if command -v gls >/dev/null 2>&1; then
-  alias ls='gls --color=auto'
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-  alias ls='ls -G'
-else
-  alias ls='ls --color=auto'
-fi
-alias vim='nvim'
-alias emacs='emacs -nw'
-alias c='clear'
-if command -v nvidia-smi >/dev/null 2>&1; then
-  alias smi='watch -n 0.1 nvidia-smi'
-fi
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  alias pomo='shortcuts run "Start Pomodoro"'
-fi
+# Load shared aliases
+[[ -f ~/.aliases ]] && source ~/.aliases
 
 export NVM_DIR="$HOME/.nvm"
 export NVM_SYMLINK_CURRENT=true
@@ -96,3 +82,4 @@ fi
 if [[ -s "$NVM_DIR/bash_completion" ]]; then
   \. "$NVM_DIR/bash_completion"
 fi
+source ${HOME}/.ghcup/env

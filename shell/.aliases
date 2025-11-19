@@ -1,0 +1,26 @@
+# Shared aliases for bash and zsh
+
+# tree with common ignores
+alias tree='tree -I "__pycache__|*.pyc|node_modules|.git|*.egg-info|.venv|venv|.mypy_cache|.pytest_cache|.ruff_cache|dist|build"'
+
+# ls variants
+if command -v gls >/dev/null 2>&1; then
+  alias ls='gls --color=auto'
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  alias ls='ls -G'
+else
+  alias ls='ls --color=auto'
+fi
+
+# common shortcuts
+alias vim='nvim'
+alias emacs='emacs -nw'
+alias c='clear'
+
+# platform-specific
+if command -v nvidia-smi >/dev/null 2>&1; then
+  alias smi='watch -n 0.1 nvidia-smi'
+fi
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  alias pomo='shortcuts run "Start Pomodoro"'
+fi
