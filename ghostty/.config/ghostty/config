@@ -5,8 +5,6 @@ font-thicken = false
 
 # appearance - cyberdream theme
 theme = cyberdream
-background-opacity = 1.0
-background-blur-radius = 200
 macos-titlebar-style = hidden
 # Note: GTK titlebar behavior can vary across desktops/versions.
 gtk-titlebar = false
@@ -20,5 +18,6 @@ mouse-hide-while-typing = true
 copy-on-select = true
 scrollback-limit = 10000
 gtk-single-instance = false
+window-vsync = true
 
 keybind = shift+enter=text:\x1b\r
