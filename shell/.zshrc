@@ -71,8 +71,9 @@ setopt hist_ignore_all_dups
 setopt hist_save_no_dups
 setopt hist_find_no_dups
 
-# Load shared aliases
+# Load shared aliases (tracked) and local aliases (untracked, machine-specific)
 [[ -f ~/.aliases ]] && source ~/.aliases
+[[ -f ~/.aliases.local ]] && source ~/.aliases.local
 
 export NVM_DIR="$HOME/.nvm"
 export NVM_SYMLINK_CURRENT=true
