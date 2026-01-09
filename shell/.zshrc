@@ -82,4 +82,4 @@ fi
 if [[ -s "$NVM_DIR/bash_completion" ]]; then
   \. "$NVM_DIR/bash_completion"
 fi
-source ${HOME}/.ghcup/env
+[[ -r "${HOME}/.ghcup/env" ]] && source "${HOME}/.ghcup/env"
