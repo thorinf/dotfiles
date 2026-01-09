@@ -19,7 +19,7 @@ restow:
 	$(STOW) -t $(STOW_TARGET) --restow $(PACKAGES)
 
 brew:
-    brew install stow neovim tmux ripgrep btop
+	brew install stow neovim tmux ripgrep btop
 
 apt:
-    sudo apt update && sudo apt install -y stow neovim tmux zsh ripgrep btop
+	sudo apt update && sudo apt install -y stow neovim tmux zsh ripgrep btop
