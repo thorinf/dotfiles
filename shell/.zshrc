@@ -75,12 +75,4 @@ setopt hist_find_no_dups
 [[ -f ~/.aliases ]] && source ~/.aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
 
-export NVM_DIR="$HOME/.nvm"
-export NVM_SYMLINK_CURRENT=true
-if [[ -s "$NVM_DIR/nvm.sh" ]]; then
-  \. "$NVM_DIR/nvm.sh"
-fi
-if [[ -s "$NVM_DIR/bash_completion" ]]; then
-  \. "$NVM_DIR/bash_completion"
-fi
 [[ -r "${HOME}/.ghcup/env" ]] && source "${HOME}/.ghcup/env"
