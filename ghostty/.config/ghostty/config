@@ -2,6 +2,7 @@
 font-family = "JetBrainsMono Nerd Font Mono"
 font-size = 14
 font-thicken = false
+adjust-cell-height = -2
 
 # appearance - cyberdream theme
 theme = cyberdream
