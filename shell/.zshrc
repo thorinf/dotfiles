@@ -71,8 +71,19 @@ setopt hist_ignore_all_dups
 setopt hist_save_no_dups
 setopt hist_find_no_dups
 
-# Load shared aliases (tracked) and local aliases (untracked, machine-specific)
+# Load shared aliases (tracked), private aliases (dotfiles-private), and local aliases (per-machine)
 [[ -f ~/.aliases ]] && source ~/.aliases
+[[ -f ~/.aliases.private ]] && source ~/.aliases.private
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
 
 [[ -r "${HOME}/.ghcup/env" ]] && source "${HOME}/.ghcup/env"
+
+# bun completions
+[ -s "/Users/thorin/.bun/_bun" ] && source "/Users/thorin/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# .NET SDK (Homebrew)
+export PATH="$PATH:/opt/homebrew/opt/dotnet@8/libexec"
