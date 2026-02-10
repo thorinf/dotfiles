@@ -85,5 +85,5 @@ setopt hist_find_no_dups
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# .NET SDK (Homebrew)
-export PATH="$PATH:/opt/homebrew/opt/dotnet@8/libexec"
+# .NET SDK
+export PATH="$PATH:$HOME/.dotnet"
