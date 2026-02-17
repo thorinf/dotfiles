@@ -29,6 +29,6 @@ vim.opt.splitbelow = true
 
 vim.opt.scrolloff = 10
 
-vim.opt.wrap = false
+vim.opt.wrap = true
 
 vim.opt.cmdheight = 0

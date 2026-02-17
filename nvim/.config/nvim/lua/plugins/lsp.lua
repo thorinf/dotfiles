@@ -125,7 +125,8 @@ return {
       local mason_lspconfig = require("mason-lspconfig")
 
       vim.diagnostic.config({
-        virtual_text = true,
+        virtual_text = false,
+        virtual_lines = false,
         float = { border = "rounded" },
       })
 
