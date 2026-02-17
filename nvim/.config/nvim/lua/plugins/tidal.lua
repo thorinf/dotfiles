@@ -41,7 +41,9 @@ end
 
 -- Send with multiline wrapping
 local function send_lines(lines)
-  if not lines or #lines == 0 then return end
+  if not lines or #lines == 0 then
+    return
+  end
   if #lines > 1 then
     send(":{\n" .. table.concat(lines, "\n") .. "\n:}")
   else
@@ -57,14 +59,18 @@ local function get_block()
 
   while start > 1 do
     local line = vim.fn.getline(start - 1)
-    if line:match("^%s*$") then break end
+    if line:match("^%s*$") then
+      break
+    end
     start = start - 1
   end
 
   local last = vim.fn.line("$")
   while finish < last do
     local line = vim.fn.getline(finish + 1)
-    if line:match("^%s*$") then break end
+    if line:match("^%s*$") then
+      break
+    end
     finish = finish + 1
   end
 
@@ -73,7 +79,9 @@ end
 
 -- Flash highlight on sent region
 local function flash(bufnr, start_line, end_line)
-  if not vim.api.nvim_buf_is_valid(bufnr) then return end
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
   for i = start_line, end_line do
     vim.api.nvim_buf_add_highlight(bufnr, ns_flash, "IncSearch", i - 1, 0, -1)
   end
@@ -86,7 +94,9 @@ end
 
 -- Add playing sign for pattern
 local function add_sign(bufnr, n, line)
-  if not vim.api.nvim_buf_is_valid(bufnr) then return end
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
   state.playing[bufnr] = state.playing[bufnr] or {}
 
   -- Remove existing sign for this pattern
@@ -104,7 +114,9 @@ end
 
 -- Remove playing sign for pattern
 local function remove_sign(bufnr, n)
-  if not state.playing[bufnr] or not state.playing[bufnr][n] then return end
+  if not state.playing[bufnr] or not state.playing[bufnr][n] then
+    return
+  end
   pcall(vim.api.nvim_buf_del_extmark, bufnr, ns_signs, state.playing[bufnr][n])
   state.playing[bufnr][n] = nil
 end
@@ -260,7 +272,9 @@ local function setup_keymaps()
   local opts = { buffer = true, silent = true }
 
   vim.keymap.set({ "n", "i" }, "<C-e>", function()
-    if vim.fn.mode() == "i" then vim.cmd("stopinsert") end
+    if vim.fn.mode() == "i" then
+      vim.cmd("stopinsert")
+    end
     M.send_block()
   end, opts)
 
@@ -279,15 +293,23 @@ local function setup_keymaps()
   vim.keymap.set("n", "<C-h>", M.hush, opts)
 
   for i = 1, 9 do
-    vim.keymap.set("n", "<C-" .. i .. ">", function() M.toggle(i) end, opts)
+    vim.keymap.set("n", "<C-" .. i .. ">", function()
+      M.toggle(i)
+    end, opts)
   end
 
-  vim.keymap.set("n", "<C-0>", function() M.toggle(10) end, opts)
+  vim.keymap.set("n", "<C-0>", function()
+    M.toggle(10)
+  end, opts)
 
   for i = 1, 9 do
-    vim.keymap.set("n", "<leader>" .. i, function() M.jump(i) end, opts)
+    vim.keymap.set("n", "<leader>" .. i, function()
+      M.jump(i)
+    end, opts)
   end
-  vim.keymap.set("n", "<leader>0", function() M.jump(10) end, opts)
+  vim.keymap.set("n", "<leader>0", function()
+    M.jump(10)
+  end, opts)
 
   vim.keymap.set("n", "<leader>d", function()
     local char = vim.fn.getchar()
