@@ -162,7 +162,7 @@ return {
 
       local servers = {
         clangd = {
-          filetypes = { "c", "cpp", "proto" },
+          filetypes = { "c", "cpp", "cuda", "proto" },
           cmd = {
             "clangd",
             "--background-index",
