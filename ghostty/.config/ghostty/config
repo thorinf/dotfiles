@@ -22,8 +22,9 @@ window-padding-balance = true
 # behavior
 mouse-hide-while-typing = true
 copy-on-select = true
-scrollback-limit = 10000
+scrollback-limit = 10000000
 gtk-single-instance = false
 window-vsync = true
+macos-option-as-alt = true
 
 keybind = shift+enter=text:\x1b\r
