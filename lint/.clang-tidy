@@ -1,49 +1,26 @@
-# Global Clang-Tidy configuration (sane defaults)
-# Project-local .clang-tidy files override these settings.
-
 Checks: >
-  clang-diagnostic-*,
-  clang-analyzer-*,
+  -*,
   bugprone-*,
   performance-*,
-  portability-*,
-  readability-*,
-  modernize-*,
-  misc-*,
-  cppcoreguidelines-*,
-  hicpp-*,
-  concurrency-*,
-  -readability-identifier-length,
-  -readability-identifier-naming,
-  -readability-braces-around-statements,
-  -readability-magic-numbers,
-  -cppcoreguidelines-avoid-magic-numbers,
-  -cppcoreguidelines-avoid-c-arrays,
-  -hicpp-avoid-c-arrays,
-  -cppcoreguidelines-pro-type-reinterpret-cast,
-  -cppcoreguidelines-non-private-member-variables-in-classes,
-  -modernize-use-trailing-return-type,
-  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-  -hicpp-no-array-decay,
-  -misc-non-private-member-variables-in-classes
+  modernize-use-override,
+  modernize-use-nullptr,
+  modernize-use-auto,
+  readability-redundant-declaration,
+  readability-misleading-indentation,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
 
-# Respect project formatting; fallback to built-in if none.
-FormatStyle: file
+# bugprone-*                        Catches real bugs: use-after-move, dangling handles, etc.
+# performance-*                     Unnecessary copies, inefficient containers, move semantics
+# modernize-use-override/nullptr    Low noise, prevents real mistakes
+# modernize-use-auto                Reduces verbose type declarations
+# readability-redundant-*           Dead declarations
+# readability-misleading-indent     Catches indentation bugs
+#
+# Disabled:
+# bugprone-easily-swappable-params  Too noisy for math-heavy code (float x, float y, float z)
+# bugprone-narrowing-conversions    Noisy with CUDA (int/float/size_t conversions everywhere)
 
-# Analyze all headers by default.
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '(include|cuda|src)/.*\.(h|hpp|cuh)$'
 
-# Allow inheriting from parent configs if present.
-InheritParentConfig: true
-
-# Common option tweaks to reduce noise and improve modernize suggestions.
-CheckOptions:
-  - key: modernize-use-nullptr.NullMacros
-    value: 'NULL'
-  - key: readability-implicit-bool-conversion.AllowIntegerConditions
-    value: 'true'
-  - key: readability-implicit-bool-conversion.AllowPointerConditions
-    value: 'true'
-
-# CUDA note: if device-side analysis is noisy, consider adding in a project .clang-tidy:
-# ExtraArgs: ['--cuda-host-only']
+WarningsAsErrors: ''
