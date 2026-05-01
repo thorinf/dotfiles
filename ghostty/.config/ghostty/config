@@ -4,8 +4,9 @@ font-size = 14
 font-thicken = false
 adjust-cell-height = -2
 
-# appearance - cyberdream theme
+# appearance - cyberdream theme with gruvbox-dark-hard background
 theme = cyberdream
+background = #1d2021
 
 # color rendering
 alpha-blending = linear-corrected
