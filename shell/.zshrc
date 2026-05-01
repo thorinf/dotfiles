@@ -49,6 +49,9 @@ if [[ $- == *i* ]]; then
   zinit cdreplay -q
 
   [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+  # fzf shell integration (Ctrl-R history, Ctrl-T file picker, Alt-C cd)
+  command -v fzf >/dev/null && source <(fzf --zsh)
 fi
 
 bindkey -v

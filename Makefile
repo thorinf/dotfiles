@@ -19,7 +19,7 @@ restow:
 	$(STOW) -t $(STOW_TARGET) --restow $(PACKAGES)
 
 brew:
-	brew install stow neovim tmux ripgrep btop node ccache
+	brew install stow neovim tmux ripgrep btop node ccache fzf
 
 apt:
-	sudo apt update && sudo apt install -y stow neovim tmux zsh ripgrep btop ccache
+	sudo apt update && sudo apt install -y stow neovim tmux zsh ripgrep btop ccache fzf
