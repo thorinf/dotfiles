@@ -6,6 +6,11 @@ adjust-cell-height = -2
 
 # appearance - cyberdream theme
 theme = cyberdream
+
+# color rendering
+alpha-blending = linear-corrected
+window-colorspace = display-p3
+
 macos-titlebar-style = hidden
 # Note: GTK titlebar behavior can vary across desktops/versions.
 gtk-titlebar = false
