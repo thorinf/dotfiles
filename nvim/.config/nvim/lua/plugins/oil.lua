@@ -8,7 +8,6 @@ function _G.get_oil_winbar()
   return vim.api.nvim_buf_get_name(bufnr)
 end
 
-require("mini.icons").setup({})
 require("oil").setup({
   default_file_explorer = false,
   win_options = {
