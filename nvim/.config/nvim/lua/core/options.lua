@@ -33,6 +33,9 @@ vim.opt.wrap = true
 
 vim.opt.cmdheight = 0
 
+-- Rounded border on all floating windows (LSP hover, signature, diagnostics, etc).
+vim.opt.winborder = "rounded"
+
 vim.api.nvim_create_autocmd("VimResized", {
   pattern = "*",
   command = "wincmd =",

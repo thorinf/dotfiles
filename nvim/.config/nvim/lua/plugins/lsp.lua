@@ -77,14 +77,6 @@ vim.diagnostic.config({
   float = { border = "rounded" },
 })
 
--- Rounded border on all LSP floating windows (modern replacement for vim.lsp.with).
-local orig_open_floating = vim.lsp.util.open_floating_preview
-function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
-  opts = opts or {}
-  opts.border = opts.border or "rounded"
-  return orig_open_floating(contents, syntax, opts, ...)
-end
-
 -- LSP keymaps + extras (lazily required) on attach.
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
