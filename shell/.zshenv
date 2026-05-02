@@ -6,4 +6,4 @@ export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:${PATH:-}"
 if [[ -d "$HOME/.nvm/versions/node/current/bin" ]]; then
   export PATH="$HOME/.nvm/versions/node/current/bin:$PATH"
 fi
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
