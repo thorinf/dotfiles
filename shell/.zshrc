@@ -73,8 +73,6 @@ setopt hist_find_no_dups
 [[ -f ~/.aliases.private ]] && source ~/.aliases.private
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
 
-[[ -r "${HOME}/.ghcup/env" ]] && source "${HOME}/.ghcup/env"
-
 # bun completions
 [ -s "/Users/thorin/.bun/_bun" ] && source "/Users/thorin/.bun/_bun"
 

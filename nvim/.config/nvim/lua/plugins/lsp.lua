@@ -221,7 +221,6 @@ return {
           },
         },
         jsonls = {},
-        -- hls = {},
       }
 
       mason_lspconfig.setup({
