@@ -26,6 +26,6 @@ copy-on-select = true
 scrollback-limit = 10000000
 gtk-single-instance = false
 window-vsync = true
-macos-option-as-alt = true
+macos-option-as-alt = right
 
 keybind = shift+enter=text:\x1b\r
