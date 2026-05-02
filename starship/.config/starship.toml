@@ -5,30 +5,37 @@ add_newline = false
 command_timeout = 100
 
 [character]
-success_symbol = "[❯](bold green)"
-error_symbol = "[❯](bold red)"
+success_symbol = "[❯](green)"
+error_symbol = "[❯](red)"
 
 [directory]
 truncation_length = 3
 truncate_to_repo = true
+style = "cyan"
 
 [git_branch]
-symbol = " "
+symbol = " "
+format = "[$symbol$branch]($style) "
+style = "purple"
 
 [git_status]
 ahead = "⇡${count}"
 diverged = "⇕⇡${ahead_count}⇣${behind_count}"
 behind = "⇣${count}"
+style = "red"
 
 [python]
-symbol = " "
+symbol = " "
+style = "yellow"
 
 [cmd_duration]
 min_time = 2_000
+style = "yellow"
 
 [hostname]
 ssh_only = true
 format = "[$hostname]($style) "
+style = "dimmed green"
 
 [username]
 disabled = true
