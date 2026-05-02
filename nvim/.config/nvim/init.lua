@@ -17,5 +17,6 @@ require("plugins.undotree")
 require("plugins.whichkey")
 require("plugins.lazydev")
 require("plugins.treesitter")
+require("plugins.diffmain")
 
 require("core.statusline")
