@@ -1,6 +1,6 @@
 .PHONY: install adopt uninstall restow brew apt
 
-PACKAGES := editor emacs ghostty lint nvim ruff shell tmux
+PACKAGES := editor emacs ghostty lint nvim ruff shell starship tmux
 STOW ?= stow
 STOW_TARGET ?= $(HOME)
 
@@ -19,7 +19,7 @@ restow:
 	$(STOW) -t $(STOW_TARGET) --restow $(PACKAGES)
 
 brew:
-	brew install stow neovim tmux ripgrep btop node ccache fzf
+	brew install stow neovim tmux ripgrep btop node ccache fzf starship
 
 apt:
-	sudo apt update && sudo apt install -y stow neovim tmux zsh ripgrep btop ccache fzf
+	sudo apt update && sudo apt install -y stow neovim tmux zsh ripgrep btop ccache fzf starship

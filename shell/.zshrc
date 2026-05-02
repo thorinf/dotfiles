@@ -1,7 +1,3 @@
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 if [[ -t 0 ]]; then
   export GPG_TTY=$(tty)
 fi
@@ -13,9 +9,6 @@ if [[ $- == *i* ]]; then
     git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
   fi
   source "$ZINIT_HOME/zinit.zsh"
-
-  zinit ice depth=1
-  zinit light romkatv/powerlevel10k
 
   zinit light zsh-users/zsh-completions
   zinit light zsh-users/zsh-autosuggestions
@@ -48,10 +41,11 @@ if [[ $- == *i* ]]; then
 
   zinit cdreplay -q
 
-  [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
   # fzf shell integration (Ctrl-R history, Ctrl-T file picker, Alt-C cd)
   command -v fzf >/dev/null && source <(fzf --zsh)
+
+  # starship prompt
+  command -v starship >/dev/null && eval "$(starship init zsh)"
 fi
 
 bindkey -v
