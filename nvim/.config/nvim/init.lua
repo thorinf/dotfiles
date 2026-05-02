@@ -1,7 +1,6 @@
 vim.loader.enable()
 
 require("core.options")
-require("core.keymaps")
 
 -- Install/load plugins via vim.pack (built-in, replaces lazy.nvim).
 require("config.pack")

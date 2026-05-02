@@ -40,3 +40,20 @@ vim.api.nvim_create_autocmd("VimResized", {
   pattern = "*",
   command = "wincmd =",
 })
+
+-- Global keymaps
+vim.keymap.set("n", "<leader>E", "<cmd>Explore<CR>", { desc = "Open netrw (backup)" })
+
+-- Zen mode: hide warnings, only show errors.
+vim.keymap.set("n", "<leader>z", function()
+  if vim.g.zen_mode_enabled then
+    vim.diagnostic.config({ virtual_text = true, underline = true })
+    vim.g.zen_mode_enabled = false
+  else
+    vim.diagnostic.config({
+      virtual_text = { severity = { min = vim.diagnostic.severity.ERROR } },
+      underline = { severity = { min = vim.diagnostic.severity.ERROR } },
+    })
+    vim.g.zen_mode_enabled = true
+  end
+end, { desc = "Toggle zen mode" })
