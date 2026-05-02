@@ -18,7 +18,6 @@ local function prefer_local_ruff(start)
 
   return { cmd = "ruff" }
 end
--- note: if formatting ever feels slow, cache the resolved path per root before returning
 
 return {
   {
@@ -33,6 +32,8 @@ return {
         python = { "ruff_fix", "ruff_format" },
         json = { "prettierd", "prettier", stop_after_first = true },
         yaml = { "prettierd", "prettier", stop_after_first = true },
+        toml = { "taplo" },
+        cs = { "csharpier" },
       },
       formatters = {
         ruff_fix = {
@@ -84,8 +85,17 @@ return {
     "neovim/nvim-lspconfig",
     lazy = false,
     keys = {
-      { "<leader>lr", vim.cmd.LspRestart, desc = "LSP Restart" },
-      { "<leader>li", vim.cmd.LspInfo, desc = "LSP Info" },
+      {
+        "<leader>lr",
+        function()
+          for _, client in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+            vim.lsp.stop_client(client.id)
+          end
+          vim.cmd("edit")
+        end,
+        desc = "LSP Restart",
+      },
+      { "<leader>li", "<cmd>checkhealth vim.lsp<CR>", desc = "LSP Info" },
       {
         "<leader>lh",
         function()
@@ -97,42 +107,68 @@ return {
       },
     },
     dependencies = {
-      { "williamboman/mason.nvim", config = true },
+      {
+        "mason-org/mason.nvim",
+        opts = {
+          -- Add Crashdummyy's registry for Roslyn (and other servers not in the core registry).
+          registries = {
+            "github:mason-org/mason-registry",
+            "github:Crashdummyy/mason-registry",
+          },
+        },
+      },
       "mason-org/mason-lspconfig.nvim",
       {
         "aznhe21/actions-preview.nvim",
         event = "LspAttach",
         opts = {
-          diff = {
-            algorithm = "patience",
-            ignore_whitespace = true,
-          },
+          diff = { algorithm = "patience", ignore_whitespace = true },
         },
       },
       {
         "rachartier/tiny-code-action.nvim",
-        dependencies = {
-          { "nvim-lua/plenary.nvim" },
-        },
+        dependencies = { "nvim-lua/plenary.nvim" },
         event = "LspAttach",
-        opts = {
-          backend = "vim",
-        },
+        opts = { backend = "vim" },
       },
     },
     config = function()
-      local lspconfig = require("lspconfig")
-      local mason_lspconfig = require("mason-lspconfig")
-
       vim.diagnostic.config({
-        virtual_text = false,
+        virtual_text = {
+          spacing = 4,
+          prefix = "●",
+          severity = { min = vim.diagnostic.severity.WARN },
+        },
         virtual_lines = false,
         float = { border = "rounded" },
       })
 
-      local border_opts = { border = "rounded" }
-      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, border_opts)
-      vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, border_opts)
+      -- Rounded border on all LSP floating windows (modern replacement for vim.lsp.with).
+      local orig_open_floating = vim.lsp.util.open_floating_preview
+      function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
+        opts = opts or {}
+        opts.border = opts.border or "rounded"
+        return orig_open_floating(contents, syntax, opts, ...)
+      end
+
+      -- Buffer-local keymaps when an LSP attaches (replaces per-server on_attach).
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(args)
+          local bufnr = args.buf
+          local function map(keys, func, desc)
+            vim.keymap.set("n", keys, func, { buffer = bufnr, desc = "LSP: " .. desc, silent = true })
+          end
+          map("K", vim.lsp.buf.hover, "Hover Documentation")
+          map("gD", vim.lsp.buf.declaration, "Goto Declaration")
+          map("gi", vim.lsp.buf.implementation, "Goto Implementation")
+          map("gr", vim.lsp.buf.references, "Goto References")
+          map("gd", vim.lsp.buf.definition, "Goto Definition")
+          map("gt", vim.lsp.buf.type_definition, "Goto Type Definition")
+          map("<leader>ca", require("tiny-code-action").code_action, "Code Action")
+          map("<leader>cp", require("actions-preview").code_actions, "Code Action Preview")
+          map("<leader>ss", vim.lsp.buf.document_symbol, "Search Symbols")
+        end,
+      })
 
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       local ok_blink, blink = pcall(require, "blink.cmp")
@@ -140,26 +176,8 @@ return {
         capabilities = vim.tbl_deep_extend("force", capabilities, blink.get_lsp_capabilities({}, false))
       end
 
-      local function on_lsp_attach(_, bufnr)
-        local function lsp_map(keys, func, desc)
-          if desc then
-            desc = "LSP: " .. desc
-          end
-
-          vim.keymap.set("n", keys, func, { buffer = bufnr, desc = desc, silent = true })
-        end
-
-        lsp_map("K", vim.lsp.buf.hover, "Hover Documentation")
-        lsp_map("gD", vim.lsp.buf.declaration, "Goto Declaration")
-        lsp_map("gi", vim.lsp.buf.implementation, "Goto Implementation")
-        lsp_map("gr", vim.lsp.buf.references, "Goto References")
-        lsp_map("gd", vim.lsp.buf.definition, "Goto Definition")
-        lsp_map("gt", vim.lsp.buf.type_definition, "Goto Type Definition")
-        lsp_map("<leader>ca", require("tiny-code-action").code_action, "Code Action")
-        lsp_map("<leader>cp", require("actions-preview").code_actions, "Code Action Preview")
-        lsp_map("<leader>ss", vim.lsp.buf.document_symbol, "Search Symbols")
-      end
-
+      -- Per-server settings. Applied via vim.lsp.config (nvim 0.11+ API);
+      -- mason-lspconfig will auto-enable each server in ensure_installed.
       local servers = {
         clangd = {
           filetypes = { "c", "cpp", "cuda", "proto" },
@@ -175,12 +193,8 @@ return {
         lua_ls = {
           settings = {
             Lua = {
-              completion = {
-                callSnippet = "Replace",
-              },
-              diagnostics = {
-                globals = { "vim" },
-              },
+              completion = { callSnippet = "Replace" },
+              diagnostics = { globals = { "vim" } },
               runtime = { version = "LuaJIT" },
               workspace = { checkThirdParty = false },
               telemetry = { enable = false },
@@ -191,14 +205,16 @@ return {
           settings = { includeAllWorkspaceSymbols = true },
         },
         ruff = {
-          on_new_config = function(new_config, root_dir)
-            local resolved = prefer_local_ruff(root_dir)
+          -- Pick up project-local ruff (uv / venv) when the server initializes.
+          before_init = function(_, config)
+            local root = config.root_dir or vim.loop.cwd()
+            local resolved = prefer_local_ruff(root)
             local cmd = { resolved.cmd }
             if resolved.args then
               vim.list_extend(cmd, resolved.args)
             end
             table.insert(cmd, "server")
-            new_config.cmd = cmd
+            config.cmd = cmd
           end,
         },
         basedpyright = {
@@ -221,21 +237,27 @@ return {
           },
         },
         jsonls = {},
+        taplo = {},
+        -- C# is handled separately via seblyng/roslyn.nvim (see plugin spec below).
+        -- Install the server once via :MasonInstall roslyn (Crashdummyy's registry).
       }
 
-      mason_lspconfig.setup({
-        ensure_installed = { "clangd", "lua_ls", "bashls", "ruff", "basedpyright", "yamlls", "jsonls" },
-        handlers = {
-          function(server_name)
-            local server_opts = vim.tbl_deep_extend("force", {
-              capabilities = capabilities,
-              on_attach = on_lsp_attach,
-            }, servers[server_name] or {})
+      for name, opts in pairs(servers) do
+        opts.capabilities = vim.tbl_deep_extend("force", capabilities, opts.capabilities or {})
+        vim.lsp.config(name, opts)
+      end
 
-            lspconfig[server_name].setup(server_opts)
-          end,
-        },
+      require("mason-lspconfig").setup({
+        ensure_installed = vim.tbl_keys(servers),
+        automatic_enable = true,
       })
     end,
+  },
+  {
+    -- Modern C# LSP via the Roslyn server (replaces deprecated omnisharp).
+    -- Install the server once: `:MasonInstall roslyn` (uses the Crashdummyy mason registry).
+    "seblyng/roslyn.nvim",
+    ft = "cs",
+    opts = {},
   },
 }
