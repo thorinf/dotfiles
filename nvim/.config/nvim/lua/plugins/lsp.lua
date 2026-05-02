@@ -1,7 +1,7 @@
 local function prefer_local_ruff(start)
   local search_from = start
   if not search_from or search_from == "" then
-    search_from = vim.loop.cwd()
+    search_from = vim.uv.cwd()
   end
 
   -- Check for ruff.toml or uv project first
@@ -207,7 +207,7 @@ return {
         ruff = {
           -- Pick up project-local ruff (uv / venv) when the server initializes.
           before_init = function(_, config)
-            local root = config.root_dir or vim.loop.cwd()
+            local root = config.root_dir or vim.uv.cwd()
             local resolved = prefer_local_ruff(root)
             local cmd = { resolved.cmd }
             if resolved.args then
