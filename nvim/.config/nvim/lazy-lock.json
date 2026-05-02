@@ -16,6 +16,7 @@
   "nvim-lspconfig": { "branch": "master", "commit": "31026a13eefb20681124706a79fc1df6bf11ab27" },
   "oil.nvim": { "branch": "master", "commit": "0fcc83805ad11cf714a949c98c605ed717e0b83e" },
   "plenary.nvim": { "branch": "master", "commit": "74b06c6c75e4eeb3108ec01852001636d85a932b" },
+  "roslyn.nvim": { "branch": "main", "commit": "b62d1a588765f0aa1b46ed260252c9e456408835" },
   "telescope-fzf-native.nvim": { "branch": "main", "commit": "6fea601bd2b694c6f2ae08a6c6fab14930c60e2c" },
   "telescope.nvim": { "branch": "master", "commit": "ec009610d5d259ec59a6edf0219ef3f7ee4732e5" },
   "tiny-code-action.nvim": { "branch": "main", "commit": "0d040ed81f7953118b81cd12681fcdfcac069803" },
