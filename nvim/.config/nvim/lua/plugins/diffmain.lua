@@ -68,6 +68,10 @@ local function changed_files(root, ref)
   return entries
 end
 
+-- Active multi-file review session (set by the picker) — used by Tab/S-Tab cycling.
+local session = nil
+local cycle_review -- forward declaration; assigned below
+
 local function open_review_file(entry, root, base, base_label)
   -- Tear down any existing diff layout.
   if vim.wo.diff then
@@ -91,6 +95,7 @@ local function open_review_file(entry, root, base, base_label)
     vim.bo.readonly = true
   end
   local left = vim.api.nvim_get_current_win()
+  local left_buf = vim.api.nvim_get_current_buf()
   vim.wo.wrap = false
   vim.wo.foldenable = false
   vim.wo.winbar = "%#Title#branch:%#Normal# " .. entry.file
@@ -130,9 +135,34 @@ local function open_review_file(entry, root, base, base_label)
   vim.wo.wrap = false
   vim.wo.foldenable = false
   vim.wo.winbar = "%#Title#" .. base_label .. ":%#Normal# " .. base_path
+  local right_buf = vim.api.nvim_get_current_buf()
+
+  -- Bind Tab/S-Tab on both diff panes to cycle through review files when a
+  -- multi-file session is active. cycle_review is a no-op if not in diff mode.
+  for _, buf in ipairs({ left_buf, right_buf }) do
+    vim.keymap.set("n", "<Tab>", function()
+      cycle_review(1)
+    end, { buffer = buf, desc = "Next review file" })
+    vim.keymap.set("n", "<S-Tab>", function()
+      cycle_review(-1)
+    end, { buffer = buf, desc = "Prev review file" })
+  end
 
   -- End focused on the live (left) pane.
   vim.api.nvim_set_current_win(left)
+end
+
+cycle_review = function(delta)
+  if not session or #session.entries == 0 then
+    return
+  end
+  -- Only cycle if we're still in a diff layout; otherwise the user has moved on.
+  if not vim.wo.diff then
+    session = nil
+    return
+  end
+  session.index = ((session.index - 1 + delta) % #session.entries) + 1
+  open_review_file(session.entries[session.index], session.root, session.ref, session.ref)
 end
 
 local function review_current_file()
@@ -214,6 +244,16 @@ local function review_picker()
           local entry = action_state.get_selected_entry()
           actions.close(prompt_bufnr)
           if entry then
+            -- Find the index of the chosen entry in the original list so Tab
+            -- cycles from the right starting position.
+            local idx = 1
+            for i, e in ipairs(entries) do
+              if e.file == entry.value.file then
+                idx = i
+                break
+              end
+            end
+            session = { entries = entries, index = idx, root = root, ref = ref }
             open_review_file(entry.value, root, ref, ref)
           end
         end)
