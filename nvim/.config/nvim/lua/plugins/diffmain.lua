@@ -173,12 +173,24 @@ local function review_picker()
   local actions = require("telescope.actions")
   local action_state = require("telescope.actions.state")
   local entry_display = require("telescope.pickers.entry_display")
+  local previewers = require("telescope.previewers")
 
   local displayer = entry_display.create({
     separator = " ",
     items = { { width = 1 }, { remaining = true } },
   })
   local hl = { A = "DiffAdd", M = "DiffChange", D = "DiffDelete", R = "Type", C = "Type" }
+
+  -- Preview the actual diff for whichever file is highlighted in the picker.
+  local diff_previewer = previewers.new_buffer_previewer({
+    title = "Diff vs " .. ref,
+    define_preview = function(self, entry)
+      local target = entry.value.base_file or entry.value.file
+      local lines = git(root, { "diff", "--no-color", ref, "--", target })
+      vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+      vim.bo[self.state.bufnr].filetype = "diff"
+    end,
+  })
 
   pickers
     .new({}, {
@@ -196,6 +208,7 @@ local function review_picker()
         end,
       }),
       sorter = conf.generic_sorter({}),
+      previewer = diff_previewer,
       attach_mappings = function(prompt_bufnr)
         actions.select_default:replace(function()
           local entry = action_state.get_selected_entry()
