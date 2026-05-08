@@ -1,10 +1,9 @@
--- Branch review against origin/main: pick a file from a fuzzy list and view it
--- diffed inline. Left pane = the live file (LSP attaches normally). Right pane =
--- a read-only scratch buffer holding the base ref's version of the file.
---
--- Bindings:
---   <leader>gm  pick a file changed vs origin/main, open in diff
+-- Branch review against origin/main.
+--   <leader>gm  pick a file changed working-tree vs origin/main
+--   <leader>gb  pick a file your branch added since merge-base (PR-style)
 --   <leader>gM  diff the current file vs origin/main
+--   Tab/S-Tab   cycle through the picker's file list (in the diff buffers)
+--   R           prompt for a REVIEW: comment, insert above the cursor
 
 local function git(root, args)
   local argv = { "git", "-C", root }
@@ -22,7 +21,7 @@ local function repo_root()
 end
 
 local function base_ref(root)
-  -- Prefer origin/main (authoritative); fall back to local main.
+  -- Prefer origin/main (authoritative) over local main, which can be stale.
   for _, ref in ipairs({ "origin/main", "main" }) do
     git(root, { "rev-parse", "--verify", "--quiet", ref .. "^{commit}" })
     if vim.v.shell_error == 0 then
@@ -30,6 +29,15 @@ local function base_ref(root)
     end
   end
   vim.notify("Could not find origin/main or main", vim.log.levels.WARN)
+end
+
+local function merge_base(root, ref)
+  local mb = git(root, { "merge-base", ref, "HEAD" })[1]
+  if vim.v.shell_error ~= 0 or not mb or mb == "" then
+    vim.notify("Could not find merge-base with " .. ref, vim.log.levels.WARN)
+    return nil
+  end
+  return mb
 end
 
 local function relpath(root, path)
@@ -40,14 +48,11 @@ local function relpath(root, path)
   end
 end
 
-local function changed_files(root, ref)
-  -- Working tree vs ref: captures every difference between what the user is editing
-  -- right now and the base branch. This includes uncommitted local edits AND any
-  -- committed-but-not-yet-on-base work. Avoids merge-base false positives where the
-  -- branch "added" a file that origin/main has independently absorbed.
-  local raw = git(root, { "diff", "--name-status", "--find-renames", "--find-copies", ref })
+-- range_arg is either `<ref>` (working-tree vs ref) or `<ref>...HEAD` (merge-base diff).
+local function changed_files(root, range_arg)
+  local raw = git(root, { "diff", "--name-status", "--find-renames", "--find-copies", range_arg })
   if vim.v.shell_error ~= 0 then
-    vim.notify("Could not compute diff against " .. ref, vim.log.levels.WARN)
+    vim.notify("Could not compute diff for " .. range_arg, vim.log.levels.WARN)
     return {}
   end
 
@@ -68,23 +73,19 @@ local function changed_files(root, ref)
   return entries
 end
 
--- Active multi-file review session (set by the picker) — used by Tab/S-Tab cycling.
 local session = nil
-local cycle_review -- forward declaration; assigned below
+local cycle_review -- forward-declared; assigned below
 
-local function open_review_file(entry, root, base, base_label)
-  -- Tear down any existing diff layout.
+local function open_review_file(entry, root, base_show, base_label)
   if vim.wo.diff then
     pcall(vim.cmd, "windo diffoff")
     pcall(vim.cmd, "only")
   end
 
-  -- Left pane: open the actual file (LSP attaches normally).
   local branch_path = root .. "/" .. entry.file
   if vim.fn.filereadable(branch_path) == 1 then
     vim.cmd.edit(vim.fn.fnameescape(branch_path))
   else
-    -- File deleted on this branch — placeholder scratch buffer on the left.
     vim.cmd("enew")
     vim.bo.buftype = "nofile"
     vim.bo.bufhidden = "wipe"
@@ -100,27 +101,38 @@ local function open_review_file(entry, root, base, base_label)
   vim.wo.foldenable = false
   vim.wo.winbar = "%#Title#branch:%#Normal# " .. entry.file
 
-  -- Right pane: write base content to a tempfile and use :diffsplit.
   local base_path = entry.base_file or entry.file
   local content
   local missing_at_base = false
   if entry.status == "A" then
     missing_at_base = true
   else
-    content = git(root, { "show", base .. ":" .. base_path })
+    content = git(root, { "show", base_show .. ":" .. base_path })
     if vim.v.shell_error ~= 0 then
       missing_at_base = true
     end
   end
   if missing_at_base then
     content = { "── file not present at " .. base_label .. " ──" }
+  else
+    for _, ln in ipairs(content) do
+      if ln:find("\0", 1, true) then
+        content = { "── binary file (skipping diff) ──" }
+        break
+      end
+    end
   end
   local tmp = vim.fn.tempname()
   vim.fn.writefile(content, tmp)
 
-  vim.cmd("rightbelow vert diffsplit " .. vim.fn.fnameescape(tmp))
+  -- Delete the tempfile whether :diffsplit succeeds or errors so /tmp doesn't grow.
+  local ok, err = pcall(vim.cmd, "rightbelow vert diffsplit " .. vim.fn.fnameescape(tmp))
+  pcall(vim.fn.delete, tmp)
+  if not ok then
+    vim.notify("diffsplit failed: " .. tostring(err), vim.log.levels.ERROR)
+    return
+  end
 
-  -- Mark right buffer as read-only scratch and make the statusline show the base ref.
   vim.bo.buftype = "nofile"
   vim.bo.bufhidden = "wipe"
   vim.bo.swapfile = false
@@ -131,14 +143,13 @@ local function open_review_file(entry, root, base, base_label)
   if ft then
     vim.bo.filetype = ft
   end
+  -- Make the statusline's git_branch component show the base ref on this pane.
   vim.b.gitsigns_status_dict = { head = base_label, added = 0, changed = 0, removed = 0 }
   vim.wo.wrap = false
   vim.wo.foldenable = false
   vim.wo.winbar = "%#Title#" .. base_label .. ":%#Normal# " .. base_path
   local right_buf = vim.api.nvim_get_current_buf()
 
-  -- Bind Tab/S-Tab on both diff panes to cycle through review files when a
-  -- multi-file session is active. cycle_review is a no-op if not in diff mode.
   for _, buf in ipairs({ left_buf, right_buf }) do
     vim.keymap.set("n", "<Tab>", function()
       cycle_review(1)
@@ -148,7 +159,29 @@ local function open_review_file(entry, root, base, base_label)
     end, { buffer = buf, desc = "Prev review file" })
   end
 
-  -- End focused on the live (left) pane.
+  if vim.fn.filereadable(branch_path) == 1 then
+    vim.keymap.set("n", "R", function()
+      local lnum = vim.api.nvim_win_get_cursor(0)[1]
+      vim.ui.input({ prompt = "REVIEW: " }, function(input)
+        if not input or input == "" then
+          return
+        end
+        local cs = vim.bo[left_buf].commentstring
+        if cs == "" then
+          cs = "# %s"
+        end
+        -- Manual split around %s: gsub's replacement string interprets %0/%1 etc.
+        local before, after = cs:match("^(.-)%%s(.-)$")
+        before = before or ""
+        after = after or ""
+        local cur = vim.api.nvim_buf_get_lines(left_buf, lnum - 1, lnum, false)[1] or ""
+        local indent = cur:match("^%s*") or ""
+        local comment = indent .. before .. "REVIEW: " .. input .. after
+        vim.api.nvim_buf_set_lines(left_buf, lnum - 1, lnum - 1, false, { comment })
+      end)
+    end, { buffer = left_buf, desc = "Add REVIEW comment" })
+  end
+
   vim.api.nvim_set_current_win(left)
 end
 
@@ -156,13 +189,12 @@ cycle_review = function(delta)
   if not session or #session.entries == 0 then
     return
   end
-  -- Only cycle if we're still in a diff layout; otherwise the user has moved on.
   if not vim.wo.diff then
     session = nil
     return
   end
   session.index = ((session.index - 1 + delta) % #session.entries) + 1
-  open_review_file(session.entries[session.index], session.root, session.ref, session.ref)
+  open_review_file(session.entries[session.index], session.root, session.base_show, session.base_label)
 end
 
 local function review_current_file()
@@ -179,10 +211,13 @@ local function review_current_file()
     vim.notify("Current file is outside the git repo", vim.log.levels.WARN)
     return
   end
+  -- Drop any picker session so Tab is a no-op rather than reviving stale state.
+  session = nil
   open_review_file({ status = "M", file = file, base_file = file }, root, ref, ref)
 end
 
-local function review_picker()
+local function review_picker(opts)
+  opts = opts or {}
   local root = repo_root()
   if not root then
     return
@@ -191,9 +226,25 @@ local function review_picker()
   if not ref then
     return
   end
-  local entries = changed_files(root, ref)
+
+  local range_arg, base_show, base_label
+  if opts.merge_base then
+    local mb = merge_base(root, ref)
+    if not mb then
+      return
+    end
+    range_arg = ref .. "...HEAD"
+    base_show = mb
+    base_label = "base@" .. ref
+  else
+    range_arg = ref
+    base_show = ref
+    base_label = ref
+  end
+
+  local entries = changed_files(root, range_arg)
   if #entries == 0 then
-    vim.notify("No files changed vs " .. ref, vim.log.levels.INFO)
+    vim.notify("No files changed for " .. range_arg, vim.log.levels.INFO)
     return
   end
 
@@ -211,12 +262,11 @@ local function review_picker()
   })
   local hl = { A = "DiffAdd", M = "DiffChange", D = "DiffDelete", R = "Type", C = "Type" }
 
-  -- Preview the actual diff for whichever file is highlighted in the picker.
   local diff_previewer = previewers.new_buffer_previewer({
-    title = "Diff vs " .. ref,
+    title = "Diff (" .. range_arg .. ")",
     define_preview = function(self, entry)
       local target = entry.value.base_file or entry.value.file
-      local lines = git(root, { "diff", "--no-color", ref, "--", target })
+      local lines = git(root, { "diff", "--no-color", range_arg, "--", target })
       vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
       vim.bo[self.state.bufnr].filetype = "diff"
     end,
@@ -224,7 +274,7 @@ local function review_picker()
 
   pickers
     .new({}, {
-      prompt_title = "Changed files vs " .. ref,
+      prompt_title = "Changed files (" .. range_arg .. ")",
       finder = finders.new_table({
         results = entries,
         entry_maker = function(e)
@@ -244,8 +294,6 @@ local function review_picker()
           local entry = action_state.get_selected_entry()
           actions.close(prompt_bufnr)
           if entry then
-            -- Find the index of the chosen entry in the original list so Tab
-            -- cycles from the right starting position.
             local idx = 1
             for i, e in ipairs(entries) do
               if e.file == entry.value.file then
@@ -253,8 +301,14 @@ local function review_picker()
                 break
               end
             end
-            session = { entries = entries, index = idx, root = root, ref = ref }
-            open_review_file(entry.value, root, ref, ref)
+            session = {
+              entries = entries,
+              index = idx,
+              root = root,
+              base_show = base_show,
+              base_label = base_label,
+            }
+            open_review_file(entry.value, root, base_show, base_label)
           end
         end)
         return true
@@ -263,5 +317,12 @@ local function review_picker()
     :find()
 end
 
-vim.keymap.set("n", "<leader>gm", review_picker, { desc = "Pick changed file vs main" })
+vim.keymap.set("n", "<leader>gm", function()
+  review_picker()
+end, { desc = "Pick changed file vs main (working tree)" })
+
+vim.keymap.set("n", "<leader>gb", function()
+  review_picker({ merge_base = true })
+end, { desc = "Pick changed file vs main (since merge-base)" })
+
 vim.keymap.set("n", "<leader>gM", review_current_file, { desc = "Review current file vs main" })
