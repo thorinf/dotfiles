@@ -35,7 +35,7 @@ require("gitsigns").setup({
     end, "Undo stage hunk (toggle on staged)")
     map("n", "<leader>gR", gs.reset_buffer, "Reset buffer")
     map("n", "<leader>gp", gs.preview_hunk, "Preview hunk")
-    map("n", "<leader>gb", function()
+    map("n", "<leader>gB", function()
       gs.blame_line({ full = true })
     end, "Blame line (full)")
     map("n", "<leader>gt", gs.toggle_current_line_blame, "Toggle line blame")
