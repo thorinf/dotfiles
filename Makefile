@@ -20,8 +20,10 @@ restow:
 
 brew:
 	brew install stow neovim tmux ripgrep btop node ccache fzf starship \
-		pre-commit stylua shfmt shellcheck gitleaks clang-format
+		pre-commit stylua shfmt shellcheck gitleaks clang-format prettier
 
 apt:
 	sudo apt update && sudo apt install -y stow neovim tmux zsh ripgrep btop ccache fzf starship \
 		pre-commit shfmt shellcheck clang-format
+	npm install -g prettier
+	# csharpier (optional, for C# format-on-save): `dotnet tool install -g csharpier`
