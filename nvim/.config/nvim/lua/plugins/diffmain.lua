@@ -76,11 +76,83 @@ end
 local session = nil
 local cycle_review -- forward-declared; assigned below
 
-local function open_review_file(entry, root, base_show, base_label)
-  if vim.wo.diff then
-    pcall(vim.cmd, "windo diffoff")
-    pcall(vim.cmd, "only")
+local function review_window(role)
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    local ok, value = pcall(vim.api.nvim_win_get_var, win, "diffmain_role")
+    if ok and value == role then
+      return win
+    end
   end
+end
+
+local function prepare_review_window()
+  local branch_win = review_window("branch")
+  local base_win = review_window("base")
+
+  if branch_win and vim.api.nvim_win_is_valid(branch_win) then
+    vim.api.nvim_set_current_win(branch_win)
+  end
+
+  if base_win and vim.api.nvim_win_is_valid(base_win) then
+    pcall(vim.api.nvim_win_close, base_win, true)
+  end
+
+  if vim.wo.diff then
+    pcall(vim.cmd, "diffoff")
+  end
+end
+
+local function review_input(on_submit)
+  local width = math.min(80, math.max(32, vim.o.columns - 8))
+  local height = 4
+  local buf = vim.api.nvim_create_buf(false, true)
+
+  vim.bo[buf].buftype = "nofile"
+  vim.bo[buf].bufhidden = "wipe"
+  vim.bo[buf].swapfile = false
+  vim.bo[buf].filetype = "markdown"
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "" })
+
+  local win = vim.api.nvim_open_win(buf, true, {
+    relative = "editor",
+    row = math.max(1, math.floor((vim.o.lines - height) / 3)),
+    col = math.floor((vim.o.columns - width) / 2),
+    width = width,
+    height = height,
+    style = "minimal",
+    border = "rounded",
+    title = " REVIEW ",
+    title_pos = "left",
+  })
+
+  vim.wo[win].wrap = true
+  vim.wo[win].linebreak = true
+  vim.wo[win].breakindent = true
+
+  local function close()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+  end
+
+  local function submit()
+    local text = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), " ")
+    text = vim.trim(text)
+    close()
+    if text ~= "" then
+      on_submit(text)
+    end
+  end
+
+  vim.keymap.set({ "n", "i" }, "<CR>", submit, { buffer = buf, desc = "Submit review comment" })
+  vim.keymap.set({ "n", "i" }, "<Esc>", close, { buffer = buf, desc = "Cancel review comment" })
+  vim.keymap.set("n", "q", close, { buffer = buf, desc = "Cancel review comment" })
+
+  vim.cmd("startinsert")
+end
+
+local function open_review_file(entry, root, base_show, base_label)
+  prepare_review_window()
 
   local branch_path = root .. "/" .. entry.file
   if vim.fn.filereadable(branch_path) == 1 then
@@ -96,6 +168,7 @@ local function open_review_file(entry, root, base_show, base_label)
     vim.bo.readonly = true
   end
   local left = vim.api.nvim_get_current_win()
+  vim.w.diffmain_role = "branch"
   local left_buf = vim.api.nvim_get_current_buf()
   vim.wo.wrap = false
   vim.wo.foldenable = false
@@ -149,6 +222,7 @@ local function open_review_file(entry, root, base_show, base_label)
   vim.wo.foldenable = false
   vim.wo.winbar = "%#Title#" .. base_label .. ":%#Normal# " .. base_path
   local right_buf = vim.api.nvim_get_current_buf()
+  vim.w.diffmain_role = "base"
 
   for _, buf in ipairs({ left_buf, right_buf }) do
     vim.keymap.set("n", "<Tab>", function()
@@ -162,10 +236,7 @@ local function open_review_file(entry, root, base_show, base_label)
   if vim.fn.filereadable(branch_path) == 1 then
     vim.keymap.set("n", "R", function()
       local lnum = vim.api.nvim_win_get_cursor(0)[1]
-      vim.ui.input({ prompt = "REVIEW: " }, function(input)
-        if not input or input == "" then
-          return
-        end
+      review_input(function(input)
         local cs = vim.bo[left_buf].commentstring
         if cs == "" then
           cs = "# %s"
@@ -178,6 +249,7 @@ local function open_review_file(entry, root, base_show, base_label)
         local indent = cur:match("^%s*") or ""
         local comment = indent .. before .. "REVIEW: " .. input .. after
         vim.api.nvim_buf_set_lines(left_buf, lnum - 1, lnum - 1, false, { comment })
+        vim.api.nvim_set_current_win(left)
       end)
     end, { buffer = left_buf, desc = "Add REVIEW comment" })
   end

@@ -1,6 +1,11 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+vim.keymap.set({ "n", "x" }, "<Space>", "<Nop>", {
+  silent = true,
+  desc = "Leader",
+})
+
 vim.g.have_nerd_font = true
 vim.opt.termguicolors = true
 
@@ -23,6 +28,8 @@ vim.opt.smartcase = true
 vim.opt.signcolumn = "yes"
 
 vim.opt.updatetime = 250
+vim.opt.timeout = true
+vim.opt.timeoutlen = 500
 
 vim.opt.splitright = true
 vim.opt.splitbelow = true

@@ -2,8 +2,8 @@
 
 Requires **Neovim 0.12+** (uses `vim.pack` and `vim.lsp.config`). On
 Ubuntu/Debian the default `apt install neovim` may ship an older version —
-use the [Neovim PPA](https://github.com/neovim/neovim/blob/master/INSTALL.md#install-from-package)
-or build from source if so.
+`make apt` installs the upstream Linux Neovim archive into `~/.local/bin`
+instead of relying on the distro package.
 
 ```bash
 # install dependencies

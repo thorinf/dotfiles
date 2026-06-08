@@ -127,6 +127,23 @@ vim.keymap.set("n", "<leader>lh", function()
   vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
 end, { desc = "Toggle Inlay Hints" })
 
+vim.keymap.set("n", "<leader>ld", function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local enabled = vim.b[bufnr].clangd_semantic_tokens_enabled ~= false
+  enabled = not enabled
+  vim.b[bufnr].clangd_semantic_tokens_enabled = enabled
+
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr, name = "clangd" })) do
+    if enabled then
+      vim.lsp.semantic_tokens.start(bufnr, client.id)
+    else
+      vim.lsp.semantic_tokens.stop(bufnr, client.id)
+    end
+  end
+
+  vim.notify("clangd semantic tokens " .. (enabled and "on" or "off"))
+end, { desc = "Toggle clangd semantic tokens" })
+
 -- Capabilities (blink.cmp augmented if available).
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 local ok_blink, blink = pcall(require, "blink.cmp")
