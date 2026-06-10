@@ -1,9 +1,12 @@
 -- Branch review against origin/main.
 --   <leader>gm  pick a file changed working-tree vs origin/main
 --   <leader>gb  pick a file your branch added since merge-base (PR-style)
+--   <leader>gv  choose a diff base/mode/worktree
 --   <leader>gM  diff the current file vs origin/main
 --   Tab/S-Tab   cycle through the picker's file list (in the diff buffers)
 --   R           prompt for a REVIEW: comment, insert above the cursor
+
+local session = nil
 
 local function git(root, args)
   local argv = { "git", "-C", root }
@@ -11,8 +14,23 @@ local function git(root, args)
   return vim.fn.systemlist(argv)
 end
 
+local function repo_start()
+  local ok, root = pcall(vim.api.nvim_win_get_var, 0, "diffmain_root")
+  if ok and root and root ~= "" then
+    return root
+  end
+
+  local name = vim.api.nvim_buf_get_name(0)
+  if name ~= "" and vim.bo.buftype == "" then
+    return vim.fn.fnamemodify(name, ":p:h")
+  end
+
+  return vim.fn.getcwd()
+end
+
 local function repo_root()
-  local root = vim.fn.systemlist({ "git", "rev-parse", "--show-toplevel" })[1]
+  local start = repo_start()
+  local root = vim.fn.systemlist({ "git", "-C", start, "rev-parse", "--show-toplevel" })[1]
   if vim.v.shell_error ~= 0 or not root or root == "" then
     vim.notify("Not in a git repo", vim.log.levels.WARN)
     return nil
@@ -31,6 +49,14 @@ local function base_ref(root)
   vim.notify("Could not find origin/main or main", vim.log.levels.WARN)
 end
 
+local function upstream_ref(root)
+  local ref = git(root, { "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}" })[1]
+  if vim.v.shell_error ~= 0 or not ref or ref == "" then
+    return nil
+  end
+  return ref
+end
+
 local function merge_base(root, ref)
   local mb = git(root, { "merge-base", ref, "HEAD" })[1]
   if vim.v.shell_error ~= 0 or not mb or mb == "" then
@@ -38,6 +64,43 @@ local function merge_base(root, ref)
     return nil
   end
   return mb
+end
+
+local function diff_target(root, opts)
+  opts = opts or {}
+  local ref = opts.base
+  if ref == "upstream" then
+    ref = upstream_ref(root)
+    if not ref then
+      vim.notify("Current branch has no upstream", vim.log.levels.WARN)
+      return nil
+    end
+  end
+
+  ref = ref or base_ref(root)
+  if not ref then
+    return nil
+  end
+
+  if opts.merge_base then
+    local mb = merge_base(root, ref)
+    if not mb then
+      return nil
+    end
+    return {
+      range_arg = ref .. "...HEAD",
+      base_show = mb,
+      base_label = "base@" .. ref,
+      ref = ref,
+    }
+  end
+
+  return {
+    range_arg = ref,
+    base_show = ref,
+    base_label = ref,
+    ref = ref,
+  }
 end
 
 local function relpath(root, path)
@@ -73,7 +136,6 @@ local function changed_files(root, range_arg)
   return entries
 end
 
-local session = nil
 local cycle_review -- forward-declared; assigned below
 
 local function review_window(role)
@@ -169,6 +231,7 @@ local function open_review_file(entry, root, base_show, base_label)
   end
   local left = vim.api.nvim_get_current_win()
   vim.w.diffmain_role = "branch"
+  vim.w.diffmain_root = root
   local left_buf = vim.api.nvim_get_current_buf()
   vim.wo.wrap = false
   vim.wo.foldenable = false
@@ -223,6 +286,7 @@ local function open_review_file(entry, root, base_show, base_label)
   vim.wo.winbar = "%#Title#" .. base_label .. ":%#Normal# " .. base_path
   local right_buf = vim.api.nvim_get_current_buf()
   vim.w.diffmain_role = "base"
+  vim.w.diffmain_root = root
 
   for _, buf in ipairs({ left_buf, right_buf }) do
     vim.keymap.set("n", "<Tab>", function()
@@ -290,33 +354,18 @@ end
 
 local function review_picker(opts)
   opts = opts or {}
-  local root = repo_root()
+  local root = opts.root or repo_root()
   if not root then
     return
   end
-  local ref = base_ref(root)
-  if not ref then
+  local target = diff_target(root, opts)
+  if not target then
     return
   end
 
-  local range_arg, base_show, base_label
-  if opts.merge_base then
-    local mb = merge_base(root, ref)
-    if not mb then
-      return
-    end
-    range_arg = ref .. "...HEAD"
-    base_show = mb
-    base_label = "base@" .. ref
-  else
-    range_arg = ref
-    base_show = ref
-    base_label = ref
-  end
-
-  local entries = changed_files(root, range_arg)
+  local entries = changed_files(root, target.range_arg)
   if #entries == 0 then
-    vim.notify("No files changed for " .. range_arg, vim.log.levels.INFO)
+    vim.notify("No files changed for " .. target.range_arg, vim.log.levels.INFO)
     return
   end
 
@@ -335,10 +384,10 @@ local function review_picker(opts)
   local hl = { A = "DiffAdd", M = "DiffChange", D = "DiffDelete", R = "Type", C = "Type" }
 
   local diff_previewer = previewers.new_buffer_previewer({
-    title = "Diff (" .. range_arg .. ")",
+    title = "Diff (" .. target.range_arg .. ")",
     define_preview = function(self, entry)
-      local target = entry.value.base_file or entry.value.file
-      local lines = git(root, { "diff", "--no-color", range_arg, "--", target })
+      local path = entry.value.base_file or entry.value.file
+      local lines = git(root, { "diff", "--no-color", target.range_arg, "--", path })
       vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
       vim.bo[self.state.bufnr].filetype = "diff"
     end,
@@ -346,7 +395,7 @@ local function review_picker(opts)
 
   pickers
     .new({}, {
-      prompt_title = "Changed files (" .. range_arg .. ")",
+      prompt_title = "Changed files (" .. target.range_arg .. ")",
       finder = finders.new_table({
         results = entries,
         entry_maker = function(e)
@@ -377,16 +426,225 @@ local function review_picker(opts)
               entries = entries,
               index = idx,
               root = root,
-              base_show = base_show,
-              base_label = base_label,
+              base_show = target.base_show,
+              base_label = target.base_label,
             }
-            open_review_file(entry.value, root, base_show, base_label)
+            open_review_file(entry.value, root, target.base_show, target.base_label)
           end
         end)
         return true
       end,
     })
     :find()
+end
+
+local function select_entry(title, entries, on_select)
+  if #entries == 0 then
+    vim.notify("No entries for " .. title, vim.log.levels.INFO)
+    return
+  end
+
+  local pickers = require("telescope.pickers")
+  local finders = require("telescope.finders")
+  local conf = require("telescope.config").values
+  local actions = require("telescope.actions")
+  local action_state = require("telescope.actions.state")
+  local entry_display = require("telescope.pickers.entry_display")
+
+  local displayer = entry_display.create({
+    separator = " ",
+    items = { { width = 34 }, { remaining = true } },
+  })
+
+  pickers
+    .new({}, {
+      prompt_title = title,
+      finder = finders.new_table({
+        results = entries,
+        entry_maker = function(e)
+          return {
+            value = e,
+            ordinal = e.ordinal or e.label,
+            display = function()
+              return displayer({ e.label, e.detail or "" })
+            end,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          local entry = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
+          if entry then
+            on_select(entry.value)
+          end
+        end)
+        return true
+      end,
+    })
+    :find()
+end
+
+local function list_refs(root)
+  local raw = git(root, { "for-each-ref", "--format=%(refname:short)", "refs/heads", "refs/remotes" })
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Could not list git refs", vim.log.levels.WARN)
+    return {}
+  end
+
+  local refs = {}
+  local seen = {}
+  for _, ref in ipairs(raw) do
+    if ref ~= "" and not ref:match("/HEAD$") and not seen[ref] then
+      refs[#refs + 1] = ref
+      seen[ref] = true
+    end
+  end
+  table.sort(refs)
+  return refs
+end
+
+local function pick_ref(root, merge_base_mode)
+  local entries = {}
+  for _, ref in ipairs(list_refs(root)) do
+    entries[#entries + 1] = {
+      label = ref,
+      detail = merge_base_mode and (ref .. "...HEAD") or ref,
+      ordinal = ref,
+      ref = ref,
+    }
+  end
+
+  select_entry(merge_base_mode and "Review vs branch/ref" or "Direct diff vs branch/ref", entries, function(entry)
+    review_picker({ root = root, base = entry.ref, merge_base = merge_base_mode })
+  end)
+end
+
+local diff_menu
+
+local function list_worktrees(root)
+  local raw = git(root, { "worktree", "list", "--porcelain" })
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Could not list git worktrees", vim.log.levels.WARN)
+    return {}
+  end
+
+  local worktrees = {}
+  local current = nil
+  for _, line in ipairs(raw) do
+    if line:sub(1, 9) == "worktree " then
+      if current then
+        worktrees[#worktrees + 1] = current
+      end
+      current = { path = line:sub(10), branch = "(detached)" }
+    elseif current and line:sub(1, 7) == "branch " then
+      current.branch = line:sub(8):gsub("^refs/heads/", "")
+    end
+  end
+  if current then
+    worktrees[#worktrees + 1] = current
+  end
+
+  table.sort(worktrees, function(a, b)
+    return a.path < b.path
+  end)
+  return worktrees
+end
+
+local function pick_worktree(root)
+  local entries = {}
+  for _, wt in ipairs(list_worktrees(root)) do
+    entries[#entries + 1] = {
+      label = vim.fn.fnamemodify(wt.path, ":~"),
+      detail = wt.branch,
+      ordinal = wt.path .. " " .. wt.branch,
+      path = wt.path,
+    }
+  end
+
+  select_entry("Choose worktree", entries, function(entry)
+    diff_menu(entry.path)
+  end)
+end
+
+diff_menu = function(root_override)
+  local root = root_override or repo_root()
+  if not root then
+    return
+  end
+
+  local default_ref = base_ref(root)
+  local upstream = upstream_ref(root)
+  local root_label = vim.fn.fnamemodify(root, ":~")
+  local entries = {}
+
+  if default_ref then
+    entries[#entries + 1] = {
+      label = "Review vs " .. default_ref,
+      detail = default_ref .. "...HEAD  " .. root_label,
+      ordinal = "review default " .. default_ref,
+      run = function()
+        review_picker({ root = root, base = default_ref, merge_base = true })
+      end,
+    }
+    entries[#entries + 1] = {
+      label = "Direct vs " .. default_ref,
+      detail = default_ref .. "  " .. root_label,
+      ordinal = "direct default " .. default_ref,
+      run = function()
+        review_picker({ root = root, base = default_ref })
+      end,
+    }
+  end
+
+  if upstream then
+    entries[#entries + 1] = {
+      label = "Review vs upstream",
+      detail = upstream .. "...HEAD  " .. root_label,
+      ordinal = "review upstream " .. upstream,
+      run = function()
+        review_picker({ root = root, base = upstream, merge_base = true })
+      end,
+    }
+    entries[#entries + 1] = {
+      label = "Direct vs upstream",
+      detail = upstream .. "  " .. root_label,
+      ordinal = "direct upstream " .. upstream,
+      run = function()
+        review_picker({ root = root, base = upstream })
+      end,
+    }
+  end
+
+  entries[#entries + 1] = {
+    label = "Pick branch/ref (review)",
+    detail = "<ref>...HEAD  " .. root_label,
+    ordinal = "pick ref review",
+    run = function()
+      pick_ref(root, true)
+    end,
+  }
+  entries[#entries + 1] = {
+    label = "Pick branch/ref (direct)",
+    detail = "<ref>  " .. root_label,
+    ordinal = "pick ref direct",
+    run = function()
+      pick_ref(root, false)
+    end,
+  }
+  entries[#entries + 1] = {
+    label = "Pick worktree",
+    detail = root_label,
+    ordinal = "pick worktree",
+    run = function()
+      pick_worktree(root)
+    end,
+  }
+
+  select_entry("Diff target", entries, function(entry)
+    entry.run()
+  end)
 end
 
 vim.keymap.set("n", "<leader>gm", function()
@@ -396,5 +654,9 @@ end, { desc = "Pick changed file vs main (working tree)" })
 vim.keymap.set("n", "<leader>gb", function()
   review_picker({ merge_base = true })
 end, { desc = "Pick changed file vs main (since merge-base)" })
+
+vim.keymap.set("n", "<leader>gv", function()
+  diff_menu()
+end, { desc = "Choose diff target" })
 
 vim.keymap.set("n", "<leader>gM", review_current_file, { desc = "Review current file vs main" })
