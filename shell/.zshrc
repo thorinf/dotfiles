@@ -53,6 +53,19 @@ bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
 bindkey '^[w' kill-region
 
+# vi insert mode: readline-style line/word navigation (Cmd/Opt arrows via ghostty)
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^[b' backward-word
+bindkey -M viins '^[f' forward-word
+bindkey -M viins '^[[1;3D' backward-word   # alt+left  (CSI form)
+bindkey -M viins '^[[1;3C' forward-word    # alt+right
+bindkey -M viins '^[[1;5D' backward-word   # ctrl+left
+bindkey -M viins '^[[1;5C' forward-word    # ctrl+right
+bindkey -M viins '^[[H' beginning-of-line  # home
+bindkey -M viins '^[[F' end-of-line        # end
+bindkey -M viins '^W' backward-kill-word
+
 zle_highlight+=(paste:none)
 
 HISTSIZE=100000

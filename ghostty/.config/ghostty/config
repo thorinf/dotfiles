@@ -29,3 +29,10 @@ window-vsync = true
 macos-option-as-alt = right
 
 keybind = shift+enter=text:\x1b\r
+
+# word / line navigation in the shell (readline sequences; zsh viins binds these)
+keybind = alt+left=esc:b
+keybind = alt+right=esc:f
+keybind = alt+backspace=text:\x17
+keybind = super+left=text:\x01
+keybind = super+right=text:\x05
