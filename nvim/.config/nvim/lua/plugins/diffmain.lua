@@ -1,6 +1,6 @@
 -- Branch review against origin/main.
 --   <leader>gm  pick a file changed working-tree vs origin/main
---   <leader>gb  pick a file your branch added since merge-base (PR-style)
+--   <leader>gb  pick changed files vs merge-base, including local edits
 --   <leader>gv  choose a diff base/mode/worktree
 --   <leader>gM  diff the current file vs origin/main
 --   Tab/S-Tab   cycle through the picker's file list (in the diff buffers)
@@ -89,7 +89,7 @@ local function diff_target(root, opts)
       return nil
     end
     return {
-      range_arg = ref .. "...HEAD",
+      range_arg = mb,
       base_show = mb,
       base_label = "base@" .. ref,
       ref = ref,
@@ -112,7 +112,7 @@ local function relpath(root, path)
   end
 end
 
--- range_arg is either `<ref>` (working-tree vs ref) or `<ref>...HEAD` (merge-base diff).
+-- Compare the working tree with the selected ref or its merge-base with HEAD.
 local function changed_files(root, range_arg)
   local raw = git(root, { "diff", "--name-status", "--find-renames", "--find-copies", range_arg })
   if vim.v.shell_error ~= 0 then
@@ -447,7 +447,7 @@ local function review_picker(opts)
   local hl = { A = "DiffAdd", M = "DiffChange", D = "DiffDelete", R = "Type", C = "Type" }
 
   local diff_previewer = previewers.new_buffer_previewer({
-    title = "Diff (" .. target.range_arg .. ")",
+    title = "Diff (" .. target.base_label .. " -> working tree)",
     define_preview = function(self, entry)
       local path = entry.value.base_file or entry.value.file
       local lines = git(root, { "diff", "--no-color", target.range_arg, "--", path })
@@ -458,7 +458,7 @@ local function review_picker(opts)
 
   pickers
     .new({}, {
-      prompt_title = "Changed files (" .. target.range_arg .. ")",
+      prompt_title = "Changed files (" .. target.base_label .. " -> working tree)",
       finder = finders.new_table({
         results = entries,
         entry_maker = function(e)
@@ -573,7 +573,7 @@ local function pick_ref(root, merge_base_mode)
   for _, ref in ipairs(list_refs(root)) do
     entries[#entries + 1] = {
       label = ref,
-      detail = merge_base_mode and (ref .. "...HEAD") or ref,
+      detail = merge_base_mode and "merge-base -> working tree" or "ref -> working tree",
       ordinal = ref,
       ref = ref,
     }
@@ -645,7 +645,7 @@ diff_menu = function(root_override)
   if default_ref then
     entries[#entries + 1] = {
       label = "Review vs " .. default_ref,
-      detail = default_ref .. "...HEAD  " .. root_label,
+      detail = "merge-base -> working tree  " .. root_label,
       ordinal = "review default " .. default_ref,
       run = function()
         review_picker({ root = root, base = default_ref, merge_base = true })
@@ -664,7 +664,7 @@ diff_menu = function(root_override)
   if upstream then
     entries[#entries + 1] = {
       label = "Review vs upstream",
-      detail = upstream .. "...HEAD  " .. root_label,
+      detail = upstream .. ": merge-base -> working tree  " .. root_label,
       ordinal = "review upstream " .. upstream,
       run = function()
         review_picker({ root = root, base = upstream, merge_base = true })
@@ -682,7 +682,7 @@ diff_menu = function(root_override)
 
   entries[#entries + 1] = {
     label = "Pick branch/ref (review)",
-    detail = "<ref>...HEAD  " .. root_label,
+    detail = "merge-base -> working tree  " .. root_label,
     ordinal = "pick ref review",
     run = function()
       pick_ref(root, true)
