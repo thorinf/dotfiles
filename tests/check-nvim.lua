@@ -111,6 +111,34 @@ local function check()
   assert(vim.bo.modifiable and not vim.bo.readonly)
   assert(vim.api.nvim_buf_get_name(0) == root .. "/a.txt")
 
+  local names = fixture("names")
+  local unusual = 'caf\195\169\tline\nquote"%.txt'
+  local renamed = "renamed\tfile.txt"
+  vim.fn.writefile({ "original" }, names .. "/" .. unusual)
+  vim.fn.writefile({ "rename content" }, names .. "/b.txt")
+  git(names, "add", ".")
+  git(names, "commit", "-m", "unusual filenames")
+  git(names, "switch", "-c", "feature")
+  git(names, "mv", "b.txt", renamed)
+  git(names, "rm", "a.txt")
+  vim.fn.writefile({ "modified" }, names .. "/" .. unusual)
+  vim.fn.writefile({ "added" }, names .. "/added.txt")
+  git(names, "add", "added.txt")
+  local by_name = {}
+  for _, entry in ipairs(up(picker, "changed_files")(names, "main")) do
+    by_name[entry.file] = entry
+  end
+  assert(by_name[unusual].status == "M" and by_name[unusual].base_file == unusual)
+  assert(by_name[renamed].status == "R" and by_name[renamed].base_file == "b.txt")
+  assert(by_name["a.txt"].status == "D")
+  assert(by_name["added.txt"].status == "A" and by_name["added.txt"].base_file == nil)
+  open(by_name[unusual], names, "main", "main")
+  assert(vim.api.nvim_get_current_line() == "modified")
+  assert(vim.api.nvim_buf_get_name(0) == names .. "/" .. unusual)
+  vim.cmd("diffoff!")
+  vim.cmd("doautocmd OptionSet diff")
+  vim.wait(50)
+
   local conform_config
   package.loaded.conform = {
     setup = function(config)

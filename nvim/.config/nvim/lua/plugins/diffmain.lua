@@ -114,22 +114,27 @@ end
 
 -- Compare the working tree with the selected ref or its merge-base with HEAD.
 local function changed_files(root, range_arg)
-  local raw = git(root, { "diff", "--name-status", "--find-renames", "--find-copies", range_arg })
-  if vim.v.shell_error ~= 0 then
+  local result = vim
+    .system({ "git", "-C", root, "diff", "--name-status", "-z", "--find-renames", "--find-copies", range_arg })
+    :wait()
+  if result.code ~= 0 then
     vim.notify("Could not compute diff for " .. range_arg, vim.log.levels.WARN)
     return {}
   end
 
+  local fields = vim.split(result.stdout, "\0", { plain = true, trimempty = true })
   local entries = {}
-  for _, line in ipairs(raw) do
-    local parts = vim.split(line, "\t", { plain = true })
-    local status = parts[1]:sub(1, 1)
-    local file = parts[#parts]
-    local base_file = status == "A" and nil or file
+  local i = 1
+  while i <= #fields do
+    local status = fields[i]:sub(1, 1)
+    local file = fields[i + 1]
+    local base_file = status ~= "A" and file or nil
     if status == "R" or status == "C" then
-      base_file = parts[2]
+      file = fields[i + 2]
+      i = i + 1
     end
     entries[#entries + 1] = { status = status, file = file, base_file = base_file }
+    i = i + 2
   end
   table.sort(entries, function(a, b)
     return a.file < b.file
@@ -283,7 +288,7 @@ local function open_review_file(entry, root, base_show, base_label)
   local left_buf = vim.api.nvim_get_current_buf()
   vim.wo.wrap = false
   vim.wo.foldenable = false
-  vim.wo.winbar = "%#Title#branch:%#Normal# " .. entry.file
+  vim.wo.winbar = "%#Title#branch:%#Normal# " .. vim.fn.strtrans(entry.file):gsub("%%", "%%%%")
 
   local base_path = entry.base_file or entry.file
   local content
@@ -338,7 +343,10 @@ local function open_review_file(entry, root, base_show, base_label)
   vim.b.gitsigns_status_dict = { head = base_label, added = 0, changed = 0, removed = 0 }
   vim.wo.wrap = false
   vim.wo.foldenable = false
-  vim.wo.winbar = "%#Title#" .. base_label .. ":%#Normal# " .. base_path
+  vim.wo.winbar = "%#Title#"
+    .. base_label:gsub("%%", "%%%%")
+    .. ":%#Normal# "
+    .. vim.fn.strtrans(base_path):gsub("%%", "%%%%")
   local right_buf = vim.api.nvim_get_current_buf()
   vim.w.diffmain_role = "base"
   vim.w.diffmain_root = root
