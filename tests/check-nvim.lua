@@ -110,6 +110,42 @@ local function check()
   assert(#vim.api.nvim_list_wins() == 1 and vim.w.diffmain_root == nil)
   assert(vim.bo.modifiable and not vim.bo.readonly)
   assert(vim.api.nvim_buf_get_name(0) == root .. "/a.txt")
+
+  local conform_config
+  package.loaded.conform = {
+    setup = function(config)
+      conform_config = config
+    end,
+  }
+  package.loaded.mason = { setup = function() end }
+  package.loaded["mason-lspconfig"] = { setup = function() end }
+  package.loaded["blink.cmp"] = {}
+  require("plugins.lsp")
+  package.loaded.conform = nil
+  vim.opt.runtimepath:append(vim.fn.stdpath("data") .. "/site/pack/core/opt/conform.nvim")
+  local python = scratch .. "/python"
+  vim.fn.mkdir(python, "p")
+  vim.fn.writefile({ "[project]", 'name = "test"', 'version = "0.1.0"' }, python .. "/pyproject.toml")
+  local real_executable = vim.fn.executable
+  vim.fn.executable = function(name)
+    return name == "uv" and 1 or real_executable(name)
+  end
+  local ctx = { dirname = python, filename = python .. "/a.py", bufnr = 0 }
+  for _, name in ipairs({ "ruff_fix", "ruff_format" }) do
+    local override = conform_config.formatters[name]
+    assert(override.command(override, ctx) == "uv")
+    local config = vim.tbl_extend("force", require("conform.formatters." .. name), override)
+    local cmd = require("conform.runner").build_cmd(name, ctx, config)
+    assert(vim.fn.fnamemodify(cmd[1], ":t") == "uv" and cmd[2] == "run" and cmd[3] == "ruff")
+    assert(cmd[4] == (name == "ruff_fix" and "check" or "format"))
+  end
+  ctx.range = { start = { 1, 0 }, ["end"] = { 2, 0 } }
+  local config =
+    vim.tbl_extend("force", require("conform.formatters.ruff_format"), conform_config.formatters.ruff_format)
+  local cmd = require("conform.runner").build_cmd("ruff_format", ctx, config)
+  assert(cmd[2] == "run" and cmd[3] == "ruff" and cmd[4] == "format")
+  assert(vim.tbl_contains(cmd, "--range"))
+  vim.fn.executable = real_executable
 end
 
 local ok, err = pcall(check)

@@ -4,7 +4,8 @@ local function prefer_local_ruff(start)
     search_from = vim.uv.cwd()
   end
 
-  local ruff_config = vim.fs.find({ "ruff.toml", "pyproject.toml" }, { upward = true, path = search_from })[1]
+  local ruff_config =
+    vim.fs.find({ "ruff.toml", ".ruff.toml", "pyproject.toml" }, { upward = true, path = search_from })[1]
   if ruff_config and vim.fn.executable("uv") == 1 then
     return { cmd = "uv", args = { "run", "ruff" } }
   end
@@ -15,6 +16,10 @@ local function prefer_local_ruff(start)
   end
 
   return { cmd = "ruff" }
+end
+
+local function ruff_args(ctx, args)
+  return vim.list_extend(prefer_local_ruff(ctx.dirname).args or {}, args)
 end
 
 -- Conform (formatter)
@@ -32,29 +37,22 @@ require("conform").setup({
   },
   formatters = {
     ruff_fix = {
-      command = function(ctx)
+      command = function(_, ctx)
         return prefer_local_ruff(ctx.dirname).cmd
       end,
-      args = function(ctx)
-        local resolved = prefer_local_ruff(ctx.dirname)
-        local base_args = vim.deepcopy(require("conform.formatters.ruff_fix").args)
-        if resolved.args then
-          return vim.list_extend(vim.deepcopy(resolved.args), base_args)
-        end
-        return base_args
+      args = function(_, ctx)
+        return ruff_args(ctx, require("conform.formatters.ruff_fix").args)
       end,
     },
     ruff_format = {
-      command = function(ctx)
+      command = function(_, ctx)
         return prefer_local_ruff(ctx.dirname).cmd
       end,
-      args = function(ctx)
-        local resolved = prefer_local_ruff(ctx.dirname)
-        local base_args = vim.deepcopy(require("conform.formatters.ruff_format").args)
-        if resolved.args then
-          return vim.list_extend(vim.deepcopy(resolved.args), base_args)
-        end
-        return base_args
+      args = function(_, ctx)
+        return ruff_args(ctx, require("conform.formatters.ruff_format").args)
+      end,
+      range_args = function(self, ctx)
+        return ruff_args(ctx, require("conform.formatters.ruff_format").range_args(self, ctx))
       end,
     },
   },
