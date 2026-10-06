@@ -14,7 +14,7 @@ tmux -S "$socket" source-file "$repo/tmux/.config/tmux/status.conf"
 for option in window-status-current-format window-status-format; do
   rendered=$(tmux -S "$socket" display-message -p "#{E:$option}")
   case "$rendered" in
-    *"$name/child"*) ;;
+    "#[fg=]$name/child#[default]") ;;
     *) printf 'Unexpected status: %s\n' "$rendered" >&2; exit 1 ;;
   esac
 done
