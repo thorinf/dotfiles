@@ -20,7 +20,7 @@ if [[ $- == *i* ]]; then
   if (( ${#_insecure[@]} )); then
     for p in "${_insecure[@]}"; do
       if [[ -O "$p" ]]; then
-        chmod -R go-w "$p" 2>/dev/null || true
+        chmod go-w "$p" 2>/dev/null || true
       fi
     done
     _insecure=($(compaudit 2>/dev/null))
