@@ -177,7 +177,7 @@ local servers = {
     settings = { includeAllWorkspaceSymbols = true },
   },
   ruff = {
-    before_init = function(_, config)
+    cmd = function(dispatchers, config)
       local root = config.root_dir or vim.uv.cwd()
       local resolved = prefer_local_ruff(root)
       local cmd = { resolved.cmd }
@@ -185,7 +185,11 @@ local servers = {
         vim.list_extend(cmd, resolved.args)
       end
       table.insert(cmd, "server")
-      config.cmd = cmd
+      return vim.lsp.rpc.start(cmd, dispatchers, {
+        cwd = config.cmd_cwd or root,
+        env = config.cmd_env,
+        detached = config.detached,
+      })
     end,
   },
   basedpyright = {

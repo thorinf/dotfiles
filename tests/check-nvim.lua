@@ -145,6 +145,21 @@ local function check()
   local cmd = require("conform.runner").build_cmd("ruff_format", ctx, config)
   assert(cmd[2] == "run" and cmd[3] == "ruff" and cmd[4] == "format")
   assert(vim.tbl_contains(cmd, "--range"))
+
+  local launched, launch_opts
+  local real_start = vim.lsp.rpc.start
+  vim.lsp.rpc.start = function(argv, _, opts)
+    launched, launch_opts = argv, opts
+    return { test = true }
+  end
+  assert(vim.lsp.config.ruff.before_init == nil)
+  assert(vim.lsp.config.ruff.cmd({}, { root_dir = python }).test)
+  assert(vim.deep_equal(launched, { "uv", "run", "ruff", "server" }))
+  assert(launch_opts.cwd == python)
+  assert(vim.lsp.config.ruff.cmd({}, { root_dir = other }).test)
+  assert(vim.deep_equal(launched, { "ruff", "server" }))
+  assert(launch_opts.cwd == other)
+  vim.lsp.rpc.start = real_start
   vim.fn.executable = real_executable
 end
 
