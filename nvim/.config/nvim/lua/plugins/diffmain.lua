@@ -7,6 +7,7 @@
 --   R           prompt for a REVIEW: comment, insert above the cursor
 
 local session = nil
+local review = nil
 
 local function git(root, args)
   local argv = { "git", "-C", root }
@@ -15,14 +16,14 @@ local function git(root, args)
 end
 
 local function repo_start()
-  local ok, root = pcall(vim.api.nvim_win_get_var, 0, "diffmain_root")
-  if ok and root and root ~= "" then
-    return root
-  end
-
   local name = vim.api.nvim_buf_get_name(0)
   if name ~= "" and vim.bo.buftype == "" then
     return vim.fn.fnamemodify(name, ":p:h")
+  end
+
+  local ok, root = pcall(vim.api.nvim_win_get_var, 0, "diffmain_root")
+  if vim.wo.diff and ok and root and root ~= "" then
+    return root
   end
 
   return vim.fn.getcwd()
@@ -138,31 +139,64 @@ end
 
 local cycle_review -- forward-declared; assigned below
 
-local function review_window(role)
-  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    local ok, value = pcall(vim.api.nvim_win_get_var, win, "diffmain_role")
-    if ok and value == role then
-      return win
+local function close_review()
+  local state = review
+  if not state then
+    return
+  end
+  review = nil
+  session = nil
+
+  for _, mapping in ipairs(state.mappings) do
+    if vim.api.nvim_buf_is_valid(mapping.buf) then
+      vim.api.nvim_buf_call(mapping.buf, function()
+        pcall(vim.keymap.del, "n", mapping.key, { buffer = mapping.buf })
+        if mapping.previous.buffer == 1 then
+          vim.fn.mapset("n", false, mapping.previous)
+        end
+      end)
+    end
+  end
+
+  for _, win in ipairs({ state.left, state.right }) do
+    if vim.api.nvim_win_is_valid(win) then
+      vim.w[win].diffmain_role = nil
+      vim.w[win].diffmain_root = nil
+      for option, value in pairs(state.options) do
+        vim.wo[win][option] = value
+      end
+    end
+  end
+  if vim.api.nvim_win_is_valid(state.right) then
+    if #vim.api.nvim_tabpage_list_wins(vim.api.nvim_win_get_tabpage(state.right)) > 1 then
+      vim.api.nvim_win_close(state.right, true)
+    elseif vim.api.nvim_buf_is_valid(state.left_buf) then
+      vim.api.nvim_win_set_buf(state.right, state.left_buf)
     end
   end
 end
 
-local function prepare_review_window()
-  local branch_win = review_window("branch")
-  local base_win = review_window("base")
-
-  if branch_win and vim.api.nvim_win_is_valid(branch_win) then
-    vim.api.nvim_set_current_win(branch_win)
+local function check_review()
+  local state = review
+  if not state then
+    return
   end
-
-  if base_win and vim.api.nvim_win_is_valid(base_win) then
-    pcall(vim.api.nvim_win_close, base_win, true)
-  end
-
-  if vim.wo.diff then
-    pcall(vim.cmd, "diffoff")
-  end
+  vim.schedule(function()
+    if review ~= state then
+      return
+    end
+    for win, buf in pairs({ [state.left] = state.left_buf, [state.right] = state.right_buf }) do
+      if not vim.api.nvim_win_is_valid(win) or not vim.wo[win].diff or vim.api.nvim_win_get_buf(win) ~= buf then
+        close_review()
+        return
+      end
+    end
+  end)
 end
+
+local group = vim.api.nvim_create_augroup("DiffMainCleanup", { clear = true })
+vim.api.nvim_create_autocmd({ "BufWinEnter", "WinClosed" }, { group = group, callback = check_review })
+vim.api.nvim_create_autocmd("OptionSet", { group = group, pattern = "diff", callback = check_review })
 
 local function review_input(on_submit)
   local width = math.min(80, math.max(32, vim.o.columns - 8))
@@ -214,7 +248,21 @@ local function review_input(on_submit)
 end
 
 local function open_review_file(entry, root, base_show, base_label)
-  prepare_review_window()
+  local picker_session = session
+  if review and vim.api.nvim_win_is_valid(review.left) then
+    vim.api.nvim_set_current_win(review.left)
+  end
+  close_review()
+  session = picker_session
+  local options = { wrap = vim.wo.wrap, foldenable = vim.wo.foldenable, winbar = vim.wo.winbar, diff = vim.wo.diff }
+  local mappings = {}
+  local function map(buf, key, callback, desc)
+    local previous = vim.api.nvim_buf_call(buf, function()
+      return vim.fn.maparg(key, "n", false, true)
+    end)
+    mappings[#mappings + 1] = { buf = buf, key = key, previous = previous }
+    vim.keymap.set("n", key, callback, { buffer = buf, desc = desc })
+  end
 
   local branch_path = root .. "/" .. entry.file
   if vim.fn.filereadable(branch_path) == 1 then
@@ -265,10 +313,17 @@ local function open_review_file(entry, root, base_show, base_label)
   local ok, err = pcall(vim.cmd, "rightbelow vert diffsplit " .. vim.fn.fnameescape(tmp))
   pcall(vim.fn.delete, tmp)
   if not ok then
+    vim.w.diffmain_role = nil
+    vim.w.diffmain_root = nil
+    for option, value in pairs(options) do
+      vim.wo[option] = value
+    end
+    session = nil
     vim.notify("diffsplit failed: " .. tostring(err), vim.log.levels.ERROR)
     return
   end
 
+  local right = vim.api.nvim_get_current_win()
   vim.bo.buftype = "nofile"
   vim.bo.bufhidden = "wipe"
   vim.bo.swapfile = false
@@ -289,16 +344,16 @@ local function open_review_file(entry, root, base_show, base_label)
   vim.w.diffmain_root = root
 
   for _, buf in ipairs({ left_buf, right_buf }) do
-    vim.keymap.set("n", "<Tab>", function()
+    map(buf, "<Tab>", function()
       cycle_review(1)
-    end, { buffer = buf, desc = "Next review file" })
-    vim.keymap.set("n", "<S-Tab>", function()
+    end, "Next review file")
+    map(buf, "<S-Tab>", function()
       cycle_review(-1)
-    end, { buffer = buf, desc = "Prev review file" })
+    end, "Prev review file")
   end
 
   if vim.fn.filereadable(branch_path) == 1 then
-    vim.keymap.set("n", "R", function()
+    map(left_buf, "R", function()
       local lnum = vim.api.nvim_win_get_cursor(0)[1]
       review_input(function(input)
         local cs = vim.bo[left_buf].commentstring
@@ -315,10 +370,18 @@ local function open_review_file(entry, root, base_show, base_label)
         vim.api.nvim_buf_set_lines(left_buf, lnum - 1, lnum - 1, false, { comment })
         vim.api.nvim_set_current_win(left)
       end)
-    end, { buffer = left_buf, desc = "Add REVIEW comment" })
+    end, "Add REVIEW comment")
   end
 
   vim.api.nvim_set_current_win(left)
+  review = {
+    left = left,
+    right = right,
+    left_buf = left_buf,
+    right_buf = right_buf,
+    options = options,
+    mappings = mappings,
+  }
 end
 
 cycle_review = function(delta)
